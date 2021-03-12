@@ -124,15 +124,15 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\LifxNet\LifxNet.csproj">
-      <Project>{9ecd8c00-1c8c-4abb-b327-525d9e719c20}</Project>
-      <Name>LifxNet</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>6.2.12</Version>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\LifxNetPlus\LifxNetPlus.csproj">
+      <Project>{9ecd8c00-1c8c-4abb-b327-525d9e719c20}</Project>
+      <Name>LifxNetPlus</Name>
+    </ProjectReference>
   </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace LifxNet {
+namespace LifxNetPlus {
 	/// <summary>
 	/// Base class for LIFX response types
 	/// </summary>

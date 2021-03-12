@@ -1,4 +1,4 @@
-﻿namespace LifxNet {
+﻿namespace LifxNetPlus {
 	/// <summary>
 	/// LIFX light bulb
 	/// </summary>

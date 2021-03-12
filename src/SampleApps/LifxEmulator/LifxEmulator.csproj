@@ -56,13 +56,10 @@
         <Compile Include="Properties\AssemblyInfo.cs" />
     </ItemGroup>
     <ItemGroup>
-      <ProjectReference Include="..\..\LifxNet\LifxNet.csproj">
-        <Project>{9ecd8c00-1c8c-4abb-b327-525d9e719c20}</Project>
-        <Name>LifxNet</Name>
-      </ProjectReference>
+      <None Include="packages.config" />
     </ItemGroup>
     <ItemGroup>
-      <None Include="packages.config" />
+      <ProjectReference Include="..\..\LifxNetPlus\LifxNetPlus.csproj" />
     </ItemGroup>
     <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
     <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

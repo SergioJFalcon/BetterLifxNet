@@ -6,7 +6,7 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace LifxNet {
+namespace LifxNetPlus {
 	public partial class LifxClient {
 		private static uint _identifier = 1;
 		private static readonly object IdentifierLock = new object();

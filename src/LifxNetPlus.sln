@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LifxNet", "LifxNet\LifxNet.csproj", "{9ECD8C00-1C8C-4ABB-B327-525D9E719C20}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LifxNetPlus", "LifxNetPlus\LifxNetPlus.csproj", "{9ECD8C00-1C8C-4ABB-B327-525D9E719C20}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SampleApps", "SampleApps", "{41199DCE-DF15-4BD2-B5A4-1836B3A5BF54}"
 EndProject

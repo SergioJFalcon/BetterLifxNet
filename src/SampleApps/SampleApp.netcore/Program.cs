@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
-using LifxNet;
+using LifxNetPlus;
 using Newtonsoft.Json;
 
 namespace SampleApp.netcore

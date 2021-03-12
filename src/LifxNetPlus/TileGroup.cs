@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
-using System.Diagnostics;
 
-namespace LifxNet {
+namespace LifxNetPlus {
 	[Serializable]
 	public class Tile {
 		public short AccelMeasX { get; set; }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace LifxNet {
+namespace LifxNetPlus {
 	/// <summary>
 	/// LIFX Generic Device
 	/// </summary>

@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Globalization;
 
-namespace LifxNet {
+namespace LifxNetPlus {
 	/// <summary>
 	/// Extend the normal System.Drawing.Color class and make it work with HSBK
 	/// </summary>

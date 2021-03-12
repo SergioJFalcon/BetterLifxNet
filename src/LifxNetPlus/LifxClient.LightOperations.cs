@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace LifxNet {
+namespace LifxNetPlus {
 	public partial class LifxClient {
 		private readonly Dictionary<uint, Action<LifxResponse>> _taskCompletions =
 			new Dictionary<uint, Action<LifxResponse>>();

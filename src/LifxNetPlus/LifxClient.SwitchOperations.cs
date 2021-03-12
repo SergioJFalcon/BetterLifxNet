@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace LifxNet {
+namespace LifxNetPlus {
 	public partial class LifxClient {
 		/// <summary>
 		/// Get the power state of a relay on a switch device.

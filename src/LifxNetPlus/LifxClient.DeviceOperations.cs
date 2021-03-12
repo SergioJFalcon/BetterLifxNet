@@ -2,7 +2,7 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace LifxNet {
+namespace LifxNetPlus {
 	public partial class LifxClient {
 		/// <summary>
 		/// Turns the device on

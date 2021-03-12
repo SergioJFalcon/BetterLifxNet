@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace LifxNet {
+namespace LifxNetPlus {
 	/// <summary>
 	/// A wrapper class for a byte payload
 	/// Any time the payload is read from, our pointer increments

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace LifxNet {
+namespace LifxNetPlus {
 	public partial class LifxClient {
 		private const int Reserved = 0x00;
 

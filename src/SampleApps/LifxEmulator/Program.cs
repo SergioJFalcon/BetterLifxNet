@@ -7,7 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using LifxNet;
+using LifxNetPlus;
 using Console = Colorful.Console;
 
 namespace LifxEmulator {

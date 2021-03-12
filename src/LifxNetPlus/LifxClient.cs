@@ -6,7 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 
-namespace LifxNet {
+namespace LifxNetPlus {
 	/// <summary>
 	/// LIFX Client for communicating with bulbs
 	/// </summary>

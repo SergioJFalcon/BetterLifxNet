@@ -1,4 +1,4 @@
-﻿namespace LifxNet {
+﻿namespace LifxNetPlus {
 	internal enum MessageType : ushort {
 		//Device Messages
 		DeviceGetService = 0x02,

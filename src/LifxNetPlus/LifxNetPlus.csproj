@@ -2,24 +2,24 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <RootNamespace>LifxNet</RootNamespace>
-    <AssemblyName>LifxNet</AssemblyName>
+    <RootNamespace>LifxNetPlus</RootNamespace>
+    <AssemblyName>LifxNetPlus</AssemblyName>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <Company>Morten Nielsen</Company>
     <Version>2.2.0</Version>
     <Authors>Digitalhigh, Morten Nielsen</Authors>
     <Description>Library for controlling LIFX light bulbs</Description>
-    <Copyright>© Morten Nielsen 2015-2021</Copyright>
+    <Copyright>© Digitalhigh 2021</Copyright>
     <PackageTags>iot, lifx home automation uwp winphone winrt</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/d8ahazard/LifxNet</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/d8ahazard/LifxNet</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/d8ahazard/LifxNetPlus</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/d8ahazard/LifxNetPlus</RepositoryUrl>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <AllowedOutputExtensionsInPackageBuildOutputFolder>$(AllowedOutputExtensionsInPackageBuildOutputFolder);.pdb</AllowedOutputExtensionsInPackageBuildOutputFolder>
     <RepositoryType>git</RepositoryType>
     <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
-    <PackageVersion>2.2.5</PackageVersion>
+    <PackageVersion>1.0.0</PackageVersion>
     <PackageReleaseNotes>Add initial support for Multizone</PackageReleaseNotes>
   </PropertyGroup>
 
