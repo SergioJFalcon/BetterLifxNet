@@ -90,7 +90,7 @@ namespace ColorSendTest {
 				var state = await _client.GetLightStateAsync(bulb);
 				stateList.Add(state);
 				await _client.SetPowerAsync(b, 1);
-				await _client.SetBrightnessAsync(bulb, 255, TimeSpan.Zero);
+				await _client.SetBrightnessAsync(bulb, 255);
 			}
 
 			Console.WriteLine($"Flashing {_devicesBulb.Count} bulbs.");
@@ -121,7 +121,7 @@ namespace ColorSendTest {
 			foreach (var b in _devicesBulb) {
 				var bulb = (LightBulb) b;
 				var state = stateList[idx];
-				await _client.SetBrightnessAsync(bulb, state.Brightness, TimeSpan.Zero);
+				await _client.SetBrightnessAsync(bulb, state.Brightness);
 				await _client.SetPowerAsync(bulb, state.IsOn ? 1 : 0);
 				idx++;
 			}
@@ -248,15 +248,16 @@ namespace ColorSendTest {
 
 			foreach (var t in _devicesTile) {
 				var state = chains[idx];
-				var tidx = 0;
-				var colors = new List<LifxColor>();
-				for (var c = 0; c < 64; c++) {
-					var pi = c * 1.0f;
-					var progress = pi / 64;
-					colors.Add(Rainbow(progress));
+				var colors = new LifxColor[64];
+				for (var c = 0; c < 8; c++) {
+					var progress = c / 8f;
+					var col = Rainbow(progress);
+					for (var m = 0; m < 8; m++) {
+						colors[m * c] = col;
+					}
 				}
 				for (var i = state.StartIndex; i < state.TotalCount; i++) {
-					_client.SetTileState64Async(t, i, 64, 1000, colors.ToArray());
+					_client.SetTileState64Async(t, i, 1, 1000, colors.ToArray());
 				}
 				idx++;
 			}
@@ -272,7 +273,7 @@ namespace ColorSendTest {
 					colors.Add(new LifxColor(0,0,0));
 				}
 				for (var i = state.StartIndex; i < state.TotalCount; i++) {
-					_client.SetTileState64Async(t, i, 64, 1000, colors.ToArray());
+					_client.SetTileState64Async(t, i, 1, 1000, colors.ToArray());
 				}
 
 				_client.SetPowerAsync(t, 0);

@@ -29,7 +29,7 @@ namespace LifxNetPlus {
 			var doApply = apply ? 0x01 : 0x00;
 			FrameHeader header = new FrameHeader(GetNextIdentifier(), true);
 			var duration = (uint) transitionDuration.TotalMilliseconds;
-			await BroadcastMessageAsync<AcknowledgementResponse>(device.HostName, header,
+			await BroadcastMessageAsync<AcknowledgementResponse>(device, header,
 				MessageType.SetColorZones, (byte) startIndex, (byte) endIndex, color, duration, doApply);
 		}
 
@@ -64,7 +64,7 @@ namespace LifxNetPlus {
 			}
 			var doApply = apply ? 0x01 : 0x00;
 
-			await BroadcastMessageAsync<AcknowledgementResponse>(device.HostName, header,
+			await BroadcastMessageAsync<AcknowledgementResponse>(device, header,
 				MessageType.SetExtendedColorZones, duration, doApply, index, count, colorBytes);
 		}
 
@@ -79,7 +79,7 @@ namespace LifxNetPlus {
 				throw new ArgumentNullException(nameof(device));
 			FrameHeader header = new FrameHeader(GetNextIdentifier());
 			return BroadcastMessageAsync<StateExtendedColorZonesResponse>(
-				device.HostName, header, MessageType.GetExtendedColorZones);
+				device, header, MessageType.GetExtendedColorZones);
 		}
 
 		/// <summary>
@@ -96,7 +96,7 @@ namespace LifxNetPlus {
 			if (startIndex > endIndex) throw new ArgumentOutOfRangeException(nameof(startIndex));
 			FrameHeader header = new FrameHeader(GetNextIdentifier());
 			return BroadcastMessageAsync<StateMultiZoneResponse>(
-				device.HostName, header, MessageType.GetColorZones, (byte) startIndex, (byte) endIndex);
+				device, header, MessageType.GetColorZones, (byte) startIndex, (byte) endIndex);
 		}
 		
 		/// <summary>
@@ -111,7 +111,7 @@ namespace LifxNetPlus {
 				throw new ArgumentNullException(nameof(device));
 			FrameHeader header = new FrameHeader(GetNextIdentifier());
 			return BroadcastMessageAsync<StateZoneResponse>(
-				device.HostName, header, MessageType.GetColorZones, (byte) index, (byte) index);
+				device, header, MessageType.GetColorZones, (byte) index, (byte) index);
 		}
 	}
 }

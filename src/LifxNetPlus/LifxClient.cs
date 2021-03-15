@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Collections;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace LifxNetPlus {
 	/// <summary>
@@ -14,11 +17,13 @@ namespace LifxNetPlus {
 		private const int Port = 56700;
 		private readonly UdpClient _socket;
 		private bool _isRunning;
+		private byte[] _macAddress;
 
 		private LifxClient() {
 			IPEndPoint end = new IPEndPoint(IPAddress.Any, Port);
 			_socket = new UdpClient(end) {Client = {Blocking = false}, DontFragment = true};
 			_socket.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+			_macAddress = GetMacAddress();
 		}
 
 		/// <summary>
@@ -54,7 +59,6 @@ namespace LifxNetPlus {
 		private void HandleIncomingMessages(byte[] data, IPEndPoint endpoint) {
 			var remote = endpoint;
 			var msg = ParseMessage(data);
-			if (remote.Port == 56700) Debug.WriteLine("Incoming Message Type: " + msg.Type);
 			switch (msg.Type) {
 				case MessageType.DeviceStateService:
 					ProcessDeviceDiscoveryMessage(remote.Address, msg);
@@ -69,7 +73,7 @@ namespace LifxNetPlus {
 			}
 
 			if (remote.Port == 56700)
-				Debug.WriteLine("Received from {0}:{1}", remote,
+				Debug.WriteLine("Received {0} from {1}:{2}", msg.Type, remote,
 					string.Join(",", (from a in data select a.ToString("X2")).ToArray()));
 		}
 
@@ -81,23 +85,28 @@ namespace LifxNetPlus {
 			_socket.Dispose();
 		}
 
-		private Task<T> BroadcastMessageAsync<T>(string hostName, FrameHeader header, MessageType type,
+		private Task<T> BroadcastMessageAsync<T>(Device device, FrameHeader header, MessageType type,
 			params object[] args)
 			where T : LifxResponse {
-			Debug.WriteLine("Broadcasting " + type + " to " + hostName);
+			var hostname = "255.255.255.255";
+			if (device != null) {
+				hostname = device.HostName;
+				if (type != MessageType.DeviceGetService) {
+					header.TargetMacAddress = device.MacAddress;
+				}
+			}
+			Debug.WriteLine("Broadcasting " + type + " to " + hostname);
 			var payload = new Payload(args);
-
-			return BroadcastPayloadAsync<T>(hostName, header, type, payload);
+			return BroadcastPayloadAsync<T>(hostname, header, type, payload);
 		}
 
-		private async Task<T> BroadcastPayloadAsync<T>(string hostName, FrameHeader header, MessageType type,
+		private async Task<T> BroadcastPayloadAsync<T>(string host, FrameHeader header, MessageType type,
 			Payload payload)
 			where T : LifxResponse {
 			if (_socket == null)
 				throw new InvalidOperationException("No valid socket");
-
 			MemoryStream ms = new MemoryStream();
-			WritePacketToStream(ms, header, (UInt16) type, payload);
+			WritePacketToStream(ms, header, (ushort) type, payload);
 			var data = ms.ToArray();
 			Debug.WriteLine(
 				string.Join(",", (from a in data select a.ToString("X2")).ToArray()));
@@ -118,7 +127,7 @@ namespace LifxNetPlus {
 			using (MemoryStream stream = new MemoryStream()) {
 				WritePacketToStream(stream, header, (UInt16) type, payload);
 				var msg = stream.ToArray();
-				await _socket.SendAsync(msg, msg.Length, hostName, Port);
+				await _socket.SendAsync(msg, msg.Length, host, Port);
 			}
 
 			//{
@@ -141,6 +150,9 @@ namespace LifxNetPlus {
 		}
 
 		private static LifxResponse ParseMessage(byte[] packet) {
+			var fh = new LifxPacket(packet);
+			Debug.WriteLine("Schmancy packet: " + JsonConvert.SerializeObject(fh));
+			Debug.WriteLine("As string: " + fh);
 			using MemoryStream ms = new MemoryStream(packet);
 			var header = new FrameHeader();
 			BinaryReader br = new BinaryReader(ms);
@@ -171,12 +183,16 @@ namespace LifxNetPlus {
 			#region Frame
 
 			//size uint16
-			dw.Write((ushort) (payload.Length + 36)); //length
-			// origin (2 bits, must be 0), reserved (1 bit, must be 0), addressable (1 bit, must be 1), protocol 12 bits must be 0x400) = 0x1400
-			dw.Write((ushort) 0x3400); //protocol
-			dw.Write(header
-				.Identifier); //source identifier - unique value set by the client, used by responses. If 0, responses are broadcast instead
-
+			dw.Write((ushort) (payload.Length + 36)); //size
+			
+			if (type == 2) {
+				dw.Write((ushort)0x3400);
+			} else {
+				dw.Write((ushort)0x1400);
+			}
+			
+			dw.Write(header.Identifier); //source identifier - unique value set by the client, used by responses. If 0, responses are broadcast instead	
+			
 			#endregion Frame
 
 			#region Frame address
@@ -227,6 +243,27 @@ namespace LifxNetPlus {
 			dw.Write((ushort) 0); //reserved
 			dw.Write(payload.ToArray());
 			dw.Flush();
+		}
+
+		private static byte[] GetMacAddress()
+		{
+			var mac = new byte[] {0, 0, 0, 0, 0, 0, 0, 0};
+			NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();
+			if (interfaces.Length < 1) return mac;
+
+			foreach (NetworkInterface adapter in interfaces) {
+				if (adapter.NetworkInterfaceType != NetworkInterfaceType.Ethernet) {
+					continue;
+				}
+
+				PhysicalAddress address = adapter.GetPhysicalAddress();
+				var bytes = address.GetAddressBytes().ToList();
+				bytes.Add(0);
+				bytes.Add(0); // Pad bytes
+				return bytes.ToArray();
+			}
+
+			return mac;
 		}
 	}
 

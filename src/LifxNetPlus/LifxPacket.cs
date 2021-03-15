@@ -1,98 +1,167 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace LifxNetPlus {
-	internal abstract class LifxPacket {
-		private byte[] _payload;
-		private ushort _type;
+	[Serializable]
+	public class LifxPacket {
 
-		protected LifxPacket(ushort type, byte[] payload) {
-			_type = type;
-			_payload = payload;
-		}
+		public Frame LifxFrame { get; set; }
+		public FrameAddress LifxFrameAddress { get; set; }
+		public ProtocolHeader LifxProtocolHeader { get; set; }
+		public Payload Payload { get; set; }
+		
 
-		internal byte[] Payload {
-			get { return _payload; }
-		}
-
-		internal ushort Type {
-			get { return _type; }
-		}
-
-		protected LifxPacket(ushort type, object[] data) {
-			_type = type;
-			using var ms = new MemoryStream();
-			StreamWriter bw = new StreamWriter(ms);
-			foreach (var obj in data) {
-				switch (obj) {
-					case byte b:
-						bw.Write(b);
-						break;
-					case byte[] bytes:
-						bw.Write(bytes);
-						break;
-					case ushort @ushort:
-						bw.Write(@ushort);
-						break;
-					case uint u:
-						bw.Write(u);
-						break;
-					default:
-						throw new NotImplementedException();
-				}
-			}
-
-			_payload = ms.ToArray();
-		}
-
-		public static LifxPacket FromByteArray(byte[] data) {
-			//			preambleFields = [
-			//				{ name: "size"       , type:type.uint16_le },
-			//				{ name: "protocol"   , type:type.uint16_le },
-			//				{ name: "reserved1"  , type:type.byte4 }    ,
-			//				{ name: "bulbAddress", type:type.byte6 }    ,
-			//				{ name: "reserved2"  , type:type.byte2 }    ,
-			//				{ name: "site"       , type:type.byte6 }    ,
-			//				{ name: "reserved3"  , type:type.byte2 }    ,
-			//				{ name: "timestamp"  , type:type.uint64 }   ,
-			//				{ name: "packetType" , type:type.uint16_le },
-			//				{ name: "reserved4"  , type:type.byte2 }    ,
-			//			];
+		public LifxPacket(byte[] data) {
 			MemoryStream ms = new MemoryStream(data);
 			var br = new BinaryReader(ms);
 			//Header
-			ushort len = br.ReadUInt16(); //ReverseBytes(br.ReadUInt16()); //size uint16
-			ushort protocol = br.ReadUInt16(); // ReverseBytes(br.ReadUInt16()); //origin = 0
-			var identifier = br.ReadUInt32();
-			byte[] bulbAddress = br.ReadBytes(6);
-			byte[] reserved2 = br.ReadBytes(2);
-			byte[] site = br.ReadBytes(6);
-			byte[] reserved3 = br.ReadBytes(2);
-			ulong timestamp = br.ReadUInt64();
-			ushort packetType = br.ReadUInt16(); // ReverseBytes(br.ReadUInt16());
-			byte[] reserved4 = br.ReadBytes(2);
-			byte[] payload = { };
-			if (len > 0) {
-				payload = br.ReadBytes(len);
+			LifxFrame = new Frame(br);
+			LifxFrameAddress = new FrameAddress(br);
+			LifxProtocolHeader = new ProtocolHeader(br);
+			Payload = new Payload();
+			if (LifxFrame.Size > 36) {
+				Payload = new Payload(br.ReadBytes(LifxFrame.Size - 36));
 			}
-
-			LifxPacket packet = new UnknownPacket(packetType, payload, bulbAddress, site) {
-				TimeStamp = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(timestamp),
-			};
-			//packet.Identifier = identifier;
-			return packet;
 		}
 
-		private class UnknownPacket : LifxPacket {
-			public UnknownPacket(ushort packetType, byte[] payload, byte[] bulbAddress, byte[] site) : base(packetType,
-				payload) {
-				BulbAddress = bulbAddress;
-				Site = site;
+		public byte[] Encode() {
+			var bytes = new List<byte>();
+			bytes.AddRange(LifxFrame.Encode());
+			bytes.AddRange(LifxFrameAddress.Encode());
+			bytes.AddRange(LifxProtocolHeader.Encode());
+			return bytes.ToArray();
+		}
+
+		public override string ToString() {
+			var encoded = Encode();
+			return string.Join(",", (from a in encoded select a.ToString("X2")).ToArray());
+		}
+		
+		
+		public static bool GetBit(byte b, int bitNumber) {
+			byte[] bytearray = {b};
+			var bitArray = new BitArray(bytearray);
+			return bitArray[bitNumber];
+		}
+		
+		public static bool GetBit(byte[] b, int bitNumber) {
+			byte[] bytearray = b;
+			var bitArray = new BitArray(bytearray);
+			return bitArray[bitNumber];
+		}
+
+		public static byte SetBit(byte b, int bitNumber, bool value) {
+			byte[] bytearray = {b};
+			var bitArray = new BitArray(bytearray);
+			bitArray.Set(bitNumber, value);
+			bitArray.CopyTo(bytearray, 0);
+			return bytearray[0];
+		}
+		
+		public static byte[] SetBit(byte[] b, int bitNumber, bool value) {
+			byte[] bytearray = b;
+			var bitArray = new BitArray(bytearray);
+			bitArray.Set(bitNumber, value);
+			bitArray.CopyTo(bytearray, 0);
+			return bytearray;
+		}
+
+
+		[Serializable]
+		public class Frame {
+			public ushort Size { get; }
+			public const ushort Protocol = 1024;
+			public bool Addressable { get; set; }
+			public bool Tagged { get; set; }
+			public byte Origin { get; set; }
+			public uint Source { get; set; }
+
+			public byte[] TargetMacAddress = {0, 0, 0, 0, 0, 0, 0, 0};
+			
+			public Frame(BinaryReader reader) {
+				Size = reader.ReadUInt16();
+				var protoString = reader.ReadBytes(2);
+				Addressable = GetBit(protoString, 12);
+				Tagged = GetBit(protoString, 13);
+				Origin = GetBit(protoString, 14) ? (byte) 1 : (byte) 0;
+				Source = reader.ReadUInt32();
 			}
 
-			public byte[] BulbAddress { get; }
-			public DateTime TimeStamp { get; set; }
-			public byte[] Site { get; set; }
+			public byte[] Encode() {
+				var bytes = new List<byte>();
+				bytes.AddRange(BitConverter.GetBytes(Size));
+				var proto = BitConverter.GetBytes(1024);
+				proto = SetBit(proto, 12,Addressable);
+				proto = SetBit(proto, 13,Tagged);
+				proto = SetBit(proto, 14,Origin == 1);
+				bytes.AddRange(proto);
+				bytes.AddRange(BitConverter.GetBytes(Source));
+				return bytes.ToArray();
+			}
+			
+			public string TargetMacAddressName {
+				get { return string.Join(":", TargetMacAddress.Take(6).Select(tb => tb.ToString("X2")).ToArray()); }
+			}
+		}
+
+		[Serializable]
+		public class FrameAddress {
+			public byte[] Target { get; set; } = {0, 0, 0, 0, 0, 0, 0, 0};
+			public bool ResponseRequired { get; set; }
+			public bool AcknowledgeRequired { get; set; }
+			public byte Sequence { get; set; }
+			
+			public FrameAddress(BinaryReader reader) {
+				Target = reader.ReadBytes(8);
+				reader.ReadBytes(6);
+				var resByte = reader.ReadByte();
+				ResponseRequired = GetBit(resByte, 0);
+				AcknowledgeRequired = GetBit(resByte, 1);
+				Sequence = reader.ReadByte();
+			}
+
+			public byte[] Encode() {
+				var bytes = new List<byte>();
+				// Pad target address if only 6 bytes
+				var tList = Target.ToList();
+				if (Target.Length == 6) {
+					tList.AddRange(new byte[]{0,0});
+				}
+				bytes.AddRange(tList);
+				bytes.AddRange(new byte[]{0,0,0,0,0,0}); // Reserved
+				var resByte = (byte) 0;
+				resByte = SetBit(resByte, 0, ResponseRequired);
+				resByte = SetBit(resByte, 1, AcknowledgeRequired);
+				bytes.Add(resByte);
+				bytes.Add(Sequence);
+				return bytes.ToArray();
+			}
+		}
+
+		[Serializable]
+		public class ProtocolHeader {
+			public MessageType Type { get; set; }
+			public DateTime AtTime { get; set; }
+			public ProtocolHeader(BinaryReader reader) {
+				var nanoseconds = reader.ReadUInt64();
+				AtTime = Utilities.Epoch.AddMilliseconds(nanoseconds * 0.000001);
+				Type = (MessageType) reader.ReadUInt16();
+			}
+
+			public byte[] Encode() {
+				var bytes = new List<byte>();
+				AtTime = DateTime.Now;
+				var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+				var tLong = Convert.ToInt64((AtTime - epoch).TotalSeconds);
+				bytes.AddRange(BitConverter.GetBytes(tLong));
+				bytes.AddRange(new byte[]{0,0,0,0,0,0,0,0}); // Reserved
+				bytes.AddRange(BitConverter.GetBytes((ushort)Type));
+				bytes.AddRange(new byte[]{0,0}); // Reserved
+				return bytes.ToArray();
+			}
 		}
 	}
 }

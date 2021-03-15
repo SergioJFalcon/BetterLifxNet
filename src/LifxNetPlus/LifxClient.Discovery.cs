@@ -72,6 +72,7 @@ namespace LifxNetPlus {
 
 			var address = remoteAddress.ToString();
 			var mac = msg.Header.TargetMacAddress;
+			msg.Payload.Reset();
 			var svc = msg.Payload.GetUint8();
 			var port = msg.Payload.GetUInt32();
 			var lastSeen = DateTime.UtcNow;
@@ -105,7 +106,7 @@ namespace LifxNetPlus {
 				FrameHeader header = new FrameHeader(_discoverSourceId);
 				while (!token.IsCancellationRequested) {
 					try {
-						await BroadcastMessageAsync<UnknownResponse>("255.255.255.255", header,
+						await BroadcastMessageAsync<UnknownResponse>(null, header,
 							MessageType.DeviceGetService);
 					} catch (Exception e) {
 						Debug.WriteLine("Broadcast exception: " + e.Message);

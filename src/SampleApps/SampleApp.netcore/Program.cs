@@ -26,11 +26,21 @@ namespace SampleApp.netcore
         private static async void ClientDeviceDiscovered(object sender, LifxClient.DeviceDiscoveryEventArgs e)
         {
             Console.WriteLine($"Device {e.Device.MacAddressName} found @ {e.Device.HostName}");
-            var version = await _client.GetDeviceVersionAsync(e.Device);
-            var state = await _client.GetLightStateAsync((e.Device as LightBulb)!);
-            Console.WriteLine("Version info: " + JsonConvert.SerializeObject(version));
-            Console.WriteLine("State info: " + JsonConvert.SerializeObject(state));
+
+            var foo2 = await _client.GetWanAsync(e.Device);
+            Console.WriteLine("Result of 201: " + JsonConvert.SerializeObject(foo2));
+
             
+            var foo1 = await _client.GetDeviceOwnerAsync(e.Device);
+            Console.WriteLine("Owner is " + foo1.Owner.ToString() + ", label is " + foo1.Label.ToString());
+
+            
+            var wifi = await _client.GetWifiFirmwareAsync(e.Device);
+            Console.WriteLine("Wifi info: " + JsonConvert.SerializeObject(wifi));
+
+            var version = await _client.GetDeviceVersionAsync(e.Device);
+            Console.WriteLine("Version info: " + JsonConvert.SerializeObject(version));
+
             // Multi-zone devices
             if (version.Product == 31 || version.Product == 32 || version.Product == 38) {
                 Console.WriteLine("Device is multi-zone, enumerating data.");

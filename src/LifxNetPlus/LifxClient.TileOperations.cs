@@ -16,7 +16,7 @@ namespace LifxNetPlus {
 
 			FrameHeader header = new FrameHeader(GetNextIdentifier());
 			return await BroadcastMessageAsync<StateDeviceChainResponse>(
-				group.HostName, header, MessageType.GetDeviceChain);
+				group, header, MessageType.GetDeviceChain);
 		}
 
 		/// <summary>
@@ -33,7 +33,7 @@ namespace LifxNetPlus {
 
 			FrameHeader header = new FrameHeader(GetNextIdentifier());
 
-			await BroadcastMessageAsync<AcknowledgementResponse>(group.HostName, header,
+			await BroadcastMessageAsync<AcknowledgementResponse>(group, header,
 				MessageType.SetUserPosition, tileIndex, Reserved, userX, userY).ConfigureAwait(false);
 		}
 
@@ -58,7 +58,7 @@ namespace LifxNetPlus {
 
 			FrameHeader header = new FrameHeader(GetNextIdentifier());
 			return await BroadcastMessageAsync<StateTileState64Response>(
-				device.HostName, header, MessageType.GetTileState64, tileIndex, length, Reserved, x, y, width);
+				device, header, MessageType.GetTileState64, tileIndex, length, Reserved, x, y, width);
 		}
 
 		///  <summary>
@@ -84,7 +84,7 @@ namespace LifxNetPlus {
 
 			FrameHeader header = new FrameHeader(GetNextIdentifier());
 			return await BroadcastMessageAsync<StateTileState64Response>(
-				device.HostName, header, MessageType.SetTileState64, tileIndex, length, Reserved, x, y, width, duration,
+				device, header, MessageType.SetTileState64, (byte) tileIndex, (byte) length, (byte) Reserved, (byte) x, (byte) y, (byte) width, (uint) duration,
 				colors);
 		}
 	}

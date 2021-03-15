@@ -16,7 +16,7 @@ namespace LifxNetPlus {
 
 			FrameHeader header = new FrameHeader(GetNextIdentifier());
 			return await BroadcastMessageAsync<StateRelayPowerResponse>(
-				device.HostName, header, MessageType.GetRelayPower, (byte) relayIndex);
+				device, header, MessageType.GetRelayPower, (byte) relayIndex);
 		}
 
 		/// <summary>
@@ -36,7 +36,7 @@ namespace LifxNetPlus {
 
 			FrameHeader header = new FrameHeader(GetNextIdentifier());
 			return await BroadcastMessageAsync<StateRelayPowerResponse>(
-				device.HostName, header, MessageType.SetRelayPower, (byte) relayIndex, (ushort) level);
+				device, header, MessageType.SetRelayPower, (byte) relayIndex, (ushort) level);
 		}
 	}
 }

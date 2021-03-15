@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Drawing;
-using System.Text;
 using LifxNetPlus;
-using Newtonsoft.Json;
 
 namespace LifxEmulator {
 	/// <summary>
@@ -32,6 +28,9 @@ namespace LifxEmulator {
 				case MessageType.DeviceGetHostFirmware:
 					type = MessageType.DeviceStateHostFirmware;
 					return new StateHostFirmwareResponse(header, type, source, deviceVersion);
+				case MessageType.DeviceGetWifiFirmware:
+					type = MessageType.DeviceStateWifiFirmware;
+					return new StateWifiFirmwareResponse(header, type, source);
 				case MessageType.GetExtendedColorZones:
 					type = MessageType.StateExtendedColorZones;
 					return new StateExtendedColorZonesResponse(header, type, source);
@@ -50,6 +49,30 @@ namespace LifxEmulator {
 				case MessageType.DeviceSetPower:
 					type = MessageType.DeviceAcknowledgement;
 					return new AcknowledgementResponse(header, type, source);
+				case MessageType.DeviceGetLabel:
+					type = MessageType.DeviceStateLabel;
+					return new StateLabelResponse(header, type, source);
+				case MessageType.DeviceGetLocation:
+					type = MessageType.DeviceStateLocation;
+					return new StateLocationResponse(header, type, source);
+				case MessageType.DeviceGetGroup:
+					type = MessageType.DeviceStateGroup;
+					return new StateGroupResponse(header, type, source);
+				case MessageType.DeviceGetWifiInfo:
+					type = MessageType.DeviceStateWifiInfo;
+					return new StateWifiInfoResponse(header, type, source);
+				case MessageType.DeviceGetOwner:
+					type = MessageType.DeviceStateOwner;
+					return new StateOwnerResponse(header, type, source);
+				case MessageType.WanGet:
+						type = MessageType.WanState;
+						return new StateWanResponse(header, type, source);
+				case MessageType.TileGetEffect:
+					type = MessageType.TileStateEffect;
+					return new StateTileEffectResponse(header, type, source);
+				case MessageType.GetTileTapConfig:
+					type = MessageType.StateTileTapConfig;
+					return new StateTileTapConfigResponse(header, type, source);
 				default:
 					type = MessageType.DeviceAcknowledgement;
 					return new AcknowledgementResponse(header, type, source);
@@ -84,6 +107,57 @@ namespace LifxEmulator {
 		private byte Service { get; }
 		private ulong Port { get; }
 	}
+	
+	/// <summary>
+	/// State Tile Tap Config
+	/// </summary>
+	internal class StateTileTapConfigResponse : LifxResponse {
+		internal StateTileTapConfigResponse(FrameHeader header, MessageType type, uint source) : base(
+			header, type, source) {
+		}
+	}
+	
+	/// <summary>
+	/// Response to a state tile get request 
+	/// </summary>
+	internal class StateTileEffectResponse : LifxResponse {
+		internal StateTileEffectResponse(FrameHeader header, MessageType type, uint source) : base(
+			header, type, source) {
+		}
+	}
+
+	
+	/// <summary>
+	/// Response to GetLabel message. Provides device label.
+	/// </summary>
+	public class StateOwnerResponse : LifxResponse {
+		internal StateOwnerResponse(FrameHeader header, MessageType type, uint source) : base(header,
+			type, source) {
+			Owner = "Digitalhigh     ";
+			Label = Owner;
+			Updated = DateTime.Now;
+			Payload = new Payload(new object[] {Owner, Label, Updated });
+		}
+
+		public string? Owner { get; }
+		public string? Label { get; }
+		public DateTime Updated { get; }
+	}
+	
+	/// <summary>
+	/// Response to GetWAN message.
+	/// public enum Status {
+	/// </summary>
+	public class StateWanResponse : LifxResponse {
+		internal StateWanResponse(FrameHeader header, MessageType type, uint source) : base(header,
+			type, source) {
+			State = 1;
+			Payload = new Payload(new object[] {State});
+		}
+
+		public byte State { get; }
+	}
+
 
 	/// <summary>
 	/// Response to any message sent with ack_required set to 1. 
@@ -128,7 +202,77 @@ namespace LifxEmulator {
 		public LifxColor[] Colors { get; }
 	}
 	
+	public class StateWifiInfoResponse : LifxResponse {
+		internal StateWifiInfoResponse(FrameHeader header, MessageType type, uint source) : base(header,
+			type, source) {
+			Signal = 20;
+			Tx = 666;
+			Rx = 777;
+			ushort reserved = 0; 
+			Payload = new Payload(new object[] {Signal, Tx, Rx, reserved });
+		}
+
+		/// <summary>
+		/// Bytes received since power on
+		/// </summary>
+		public uint Rx { get; set; }
+
+		/// <summary>
+		/// Bytes transmitted since power on
+		/// </summary>
+		public uint Tx { get; set; }
+
+		/// <summary>
+		/// Radio receive signal strength in milliWatts
+		/// </summary>
+		public float Signal { get; set; }
+	}
+
+
+
+	/// <summary>
+	/// Response to GetWifiFirmware message.
+	/// Provides Wifi subsystem information.
+	/// </summary>
+	public class StateWifiFirmwareResponse : LifxResponse {
+		internal StateWifiFirmwareResponse(FrameHeader header, MessageType type, uint source) : base(header,
+			type, source) {
+			Build = DateTime.Now;
+			ulong reserved = 0;
+			VersionMinor = 3;
+			VersionMajor = 6;
+			Payload = new Payload(new object[] {Build, reserved, VersionMajor, VersionMinor});
+		}
+
+		/// <summary>
+		/// Firmware build time (epoch time)
+		/// </summary>
+		public DateTime Build { get; set; }
+
+		/// <summary>
+		/// Minor firmware version number
+		/// </summary>
+		public ushort VersionMinor { get; set; }
+
+		/// <summary>
+		/// Major firmware version number
+		/// </summary>
+		public ushort VersionMajor { get; set; }
+	}
 	
+	/// <summary>
+	/// Response to GetLabel message. Provides device label.
+	/// </summary>
+	internal class StateLabelResponse : LifxResponse {
+		internal StateLabelResponse(FrameHeader header, MessageType type, uint source) : base(header,
+			type, source) {
+			Label = "Emulator";
+			Payload = new Payload(new object[] {Label});
+		}
+
+		public string? Label { get; }
+	}
+
 	/// <summary>
 	/// Provides run-time information of device.
 	/// </summary>
@@ -228,6 +372,47 @@ namespace LifxEmulator {
 		/// </summary>
 		public ulong Level { get; set; }
 		
+	}
+	
+	public class StateLocationResponse : LifxResponse {
+		internal StateLocationResponse(FrameHeader header, MessageType type, uint source) : base(header,
+			type, source) {
+			var rand = new Random();
+			var location = new byte[16];
+			rand.NextBytes(location);
+			Location = location;
+			Label = "Emu room";
+			Updated = DateTime.Now;
+			Payload = new Payload(new object[] {Location, Label, Updated});
+		}
+
+		public byte[] Location { get; set; }
+
+		public string Label { get; set; }
+
+		public DateTime Updated { get; set; }
+	}
+	
+	/// <summary>
+	/// Device group.
+	/// </summary>
+	public class StateGroupResponse : LifxResponse {
+		internal StateGroupResponse(FrameHeader header, MessageType type, uint source) : base(header,
+			type, source) {
+			var rand = new Random();
+			var location = new byte[16];
+			rand.NextBytes(location);
+			Group = location;
+			Label = "Emu group";
+			Updated = DateTime.Now;
+			Payload = new Payload(new object[] {Group, Label, Updated});
+		}
+
+		public byte[] Group { get; set; }
+
+		public string Label { get; set; }
+
+		public DateTime Updated { get; set; }
 	}
 
 	/// <summary>
@@ -341,7 +526,7 @@ namespace LifxEmulator {
 					break;
 			}
 			Vendor = 1;
-			Version = 1;
+			Version = 117506305;
 			var args = new List<object> {Vendor, Product, Version};
 			Payload = new Payload(args.ToArray());
 		}

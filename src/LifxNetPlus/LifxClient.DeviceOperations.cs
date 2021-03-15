@@ -25,10 +25,10 @@ namespace LifxNetPlus {
 		public async Task SetDevicePowerStateAsync(Device device, bool isOn) {
 			if (device == null)
 				throw new ArgumentNullException(nameof(device));
-			Debug.WriteLine($"Sending DeviceSetPower({isOn}) to {device.HostName}");
+			Debug.WriteLine($"Sending DeviceSetPower({isOn}) to {device}");
 			FrameHeader header = new FrameHeader(GetNextIdentifier(), true);
 
-			_ = await BroadcastMessageAsync<AcknowledgementResponse>(device.HostName, header,
+			_ = await BroadcastMessageAsync<AcknowledgementResponse>(device, header,
 				MessageType.DeviceSetPower, (ushort) (isOn ? 65535 : 0)).ConfigureAwait(false);
 		}
 
@@ -42,9 +42,41 @@ namespace LifxNetPlus {
 				throw new ArgumentNullException(nameof(device));
 
 			FrameHeader header = new FrameHeader(GetNextIdentifier());
-			var resp = await BroadcastMessageAsync<StateLabelResponse>(device.HostName, header,
+			var resp = await BroadcastMessageAsync<StateLabelResponse>(device, header,
 				MessageType.DeviceGetLabel).ConfigureAwait(false);
 			return resp.Label;
+		}
+		
+		
+		/// <summary>
+		/// Gets the label for the device
+		/// </summary>
+		/// <param name="device"></param>
+		/// <returns>The device label</returns>
+		public async Task<StateOwnerResponse> GetDeviceOwnerAsync(Device device) {
+			if (device == null)
+				throw new ArgumentNullException(nameof(device));
+
+			FrameHeader header = new FrameHeader(GetNextIdentifier());
+			var resp = await BroadcastMessageAsync<StateOwnerResponse>(device, header,
+				MessageType.DeviceGetOwner).ConfigureAwait(false);
+			return resp;
+		}
+		
+		/// <summary>
+		/// Gets the label for the device
+		/// </summary>
+		/// <param name="device"></param>
+		/// <returns>The device label</returns>
+		public async Task<StateWanResponse> GetWanAsync(Device device) {
+			if (device == null)
+				throw new ArgumentNullException(nameof(device));
+
+			FrameHeader header = new FrameHeader(GetNextIdentifier());
+			var resp = await BroadcastMessageAsync<StateWanResponse>(device, header,
+				MessageType.WanGet).ConfigureAwait(false);
+			//Debug.WriteLine("Response: " + resp.Payload);
+			return resp;
 		}
 
 		/// <summary>
@@ -59,7 +91,7 @@ namespace LifxNetPlus {
 
 			FrameHeader header = new FrameHeader(GetNextIdentifier(), true);
 			_ = await BroadcastMessageAsync<AcknowledgementResponse>(
-				device.HostName, header, MessageType.DeviceSetLabel, label).ConfigureAwait(false);
+				device, header, MessageType.DeviceSetLabel, label).ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -70,7 +102,7 @@ namespace LifxNetPlus {
 				throw new ArgumentNullException(nameof(device));
 
 			FrameHeader header = new FrameHeader(GetNextIdentifier());
-			return BroadcastMessageAsync<StateVersionResponse>(device.HostName, header, MessageType.DeviceGetVersion);
+			return BroadcastMessageAsync<StateVersionResponse>(device, header, MessageType.DeviceGetVersion);
 		}
 
 		/// <summary>
@@ -83,7 +115,7 @@ namespace LifxNetPlus {
 				throw new ArgumentNullException(nameof(device));
 
 			FrameHeader header = new FrameHeader(GetNextIdentifier());
-			return BroadcastMessageAsync<StateHostFirmwareResponse>(device.HostName, header,
+			return BroadcastMessageAsync<StateHostFirmwareResponse>(device, header,
 				MessageType.DeviceGetHostFirmware);
 		}
 
@@ -98,7 +130,7 @@ namespace LifxNetPlus {
 				throw new ArgumentNullException(nameof(device));
 
 			FrameHeader header = new FrameHeader(GetNextIdentifier());
-			return await BroadcastMessageAsync<StateHostInfoResponse>(device.HostName, header,
+			return await BroadcastMessageAsync<StateHostInfoResponse>(device, header,
 				MessageType.DeviceGetHostInfo);
 		}
 		
@@ -113,7 +145,7 @@ namespace LifxNetPlus {
 				throw new ArgumentNullException(nameof(device));
 
 			FrameHeader header = new FrameHeader(GetNextIdentifier());
-			return await BroadcastMessageAsync<StateWifiInfoResponse>(device.HostName, header,
+			return await BroadcastMessageAsync<StateWifiInfoResponse>(device, header,
 				MessageType.DeviceGetWifiInfo);
 		}
 		
@@ -128,7 +160,7 @@ namespace LifxNetPlus {
 				throw new ArgumentNullException(nameof(device));
 
 			FrameHeader header = new FrameHeader(GetNextIdentifier());
-			return await BroadcastMessageAsync<StateWifiFirmwareResponse>(device.HostName, header,
+			return await BroadcastMessageAsync<StateWifiFirmwareResponse>(device, header,
 				MessageType.DeviceGetWifiFirmware);
 		}
 
@@ -144,7 +176,7 @@ namespace LifxNetPlus {
 				throw new ArgumentNullException(nameof(device));
 
 			FrameHeader header = new FrameHeader(GetNextIdentifier());
-			var level = await BroadcastMessageAsync<StatePowerResponse>(device.HostName, header,
+			var level = await BroadcastMessageAsync<StatePowerResponse>(device, header,
 				MessageType.DeviceGetPower);
 			return level.Level == 0 ? 0 : 1;
 		}
@@ -163,7 +195,7 @@ namespace LifxNetPlus {
 
 			FrameHeader header = new FrameHeader(GetNextIdentifier(), true);
 			if (level != 0) level = 65535;
-			await BroadcastMessageAsync<AcknowledgementResponse>(device.HostName, header,
+			await BroadcastMessageAsync<AcknowledgementResponse>(device, header,
 				MessageType.DeviceSetPower, level);
 		}
 
@@ -177,7 +209,7 @@ namespace LifxNetPlus {
 			if (device == null)
 				throw new ArrayTypeMismatchException(nameof(device));
 			FrameHeader header = new FrameHeader(GetNextIdentifier());
-			return await BroadcastMessageAsync<StateInfoResponse>(device.HostName, header,
+			return await BroadcastMessageAsync<StateInfoResponse>(device, header,
 				MessageType.DeviceGetInfo);
 		}
 		
@@ -197,7 +229,7 @@ namespace LifxNetPlus {
 			var location = new byte[16];
 			rand.NextBytes(location);
 			var updated = DateTimeOffset.Now.ToUnixTimeSeconds();
-			await BroadcastMessageAsync<StatePowerResponse>(device.HostName, header,
+			await BroadcastMessageAsync<StatePowerResponse>(device, header,
 				MessageType.DeviceSetLocation, location, label, updated);
 		}
 
@@ -211,7 +243,7 @@ namespace LifxNetPlus {
 			if (device == null)
 				throw new ArrayTypeMismatchException(nameof(device));
 			FrameHeader header = new FrameHeader(GetNextIdentifier());
-			return await BroadcastMessageAsync<StateLocationResponse>(device.HostName, header,
+			return await BroadcastMessageAsync<StateLocationResponse>(device, header,
 				MessageType.DeviceGetLocation);
 		}
 		
@@ -231,7 +263,7 @@ namespace LifxNetPlus {
 			var group = new byte[16];
 			rand.NextBytes(group);
 			var updated = DateTimeOffset.Now.ToUnixTimeSeconds();
-			await BroadcastMessageAsync<StatePowerResponse>(device.HostName, header,
+			await BroadcastMessageAsync<StatePowerResponse>(device, header,
 				MessageType.DeviceSetGroup, group, label, updated);
 		}
 
@@ -245,7 +277,7 @@ namespace LifxNetPlus {
 			if (device == null)
 				throw new ArrayTypeMismatchException(nameof(device));
 			FrameHeader header = new FrameHeader(GetNextIdentifier());
-			return await BroadcastMessageAsync<StateGroupResponse>(device.HostName, header,
+			return await BroadcastMessageAsync<StateGroupResponse>(device, header,
 				MessageType.DeviceGetGroup);
 		}
 
@@ -269,7 +301,7 @@ namespace LifxNetPlus {
 					realPayload[i] = 0;
 				}
 			} 
-			return await BroadcastMessageAsync<EchoResponse>(device.HostName, header,
+			return await BroadcastMessageAsync<EchoResponse>(device, header,
 				MessageType.DeviceEchoRequest, realPayload);
 		}
 	}

@@ -332,7 +332,7 @@ namespace LifxNetPlus {
 		public string GetString(long length = -1) {
 			if (length == -1) length = _len - 1 - _ms.Position;
 			try {
-				return _br.ReadChars((int) length).ToString();
+				return new string(_br.ReadChars((int) length));
 			} catch {
 				Debug.WriteLine($"Error getting string, pointer {_ms.Position} out of range: " + _len);
 			}

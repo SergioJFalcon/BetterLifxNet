@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using LifxNetPlus;
@@ -15,6 +17,9 @@ namespace LifxEmulator {
 		private static bool _quitFlag;
 		private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 		private static int _deviceVersion;
+		private static uint _identifier = 1;
+		private static readonly object IdentifierLock = new object();
+
 		
 		public static void Main(string[] args) {
 			var tr1 = new TextWriterTraceListener(Console.Out);
@@ -32,6 +37,15 @@ namespace LifxEmulator {
 			Console.WriteLine("Emulation mode: " + _deviceVersion);
 			StartListener().Wait();
 		}
+		
+		private static uint GetNextIdentifier() {
+			lock (IdentifierLock) {
+				_identifier++;
+			}
+
+			return _identifier;
+		}
+
 
 		private static void HandleClose(object sender, ConsoleCancelEventArgs args) {
 			_quitFlag = true;
@@ -49,12 +63,10 @@ namespace LifxEmulator {
 				Console.WriteLine("Loop.");
 				try {
 					var result = await client.ReceiveAsync();
-					Console.WriteLine($"Message received from {result.RemoteEndPoint.Address}.");
 					if (result.Buffer.Length <= 0) {
 						continue;
 					}
 
-					Console.WriteLine("Got something...");
 					await HandleIncomingMessages(result.Buffer, result.RemoteEndPoint, client);
 				} catch (Exception e) {
 					Console.WriteLine(e.ToString());
@@ -66,10 +78,10 @@ namespace LifxEmulator {
 		
 		private static async Task HandleIncomingMessages(byte[] data, IPEndPoint endpoint, UdpClient client) {
 			var remote = endpoint;
-			var msg = await ParseMessage(data);
+			var msg = await ParseMessage(data, endpoint);
 			
 			if (msg.GetType() != typeof(AcknowledgementResponse) || msg.Header.AcknowledgeRequired) {
-				Debug.WriteLine("Responding to " + remote.Address);
+				Debug.WriteLine($"Sending {msg.Type} to " + remote.Address);
 				await BroadcastMessageAsync(remote, msg, client);
 			}
 		}
@@ -93,13 +105,24 @@ namespace LifxEmulator {
 			using var dw = new BinaryWriter(outStream);
 
 			#region Frame
+			dw.Write((ushort) (payload.Length + 36));
+			if (type == 2) {
+				dw.Write((ushort)0x3400);
+			} else {
+				dw.Write((byte) 0);
+				dw.Write((byte) 20);
+			}
 
-			Console.WriteLine($"Sending {payload.Length + 36} length message...");
-			//size uint16
-			dw.Write((ushort) (payload.ToArray().Length + 36)); //length
-			// origin (2 bits, must be 0), reserved (1 bit, must be 0), addressable (1 bit, must be 1), protocol 12 bits must be 0x400) = 0x1400
-			dw.Write((ushort) 0x3400); //protocol
-			dw.Write(header.Identifier); //source identifier - unique value set by the client, used by responses. If 0, responses are broadcast instead
+			if (type == 54 || type == 201) {
+				dw.Write((byte)17);
+				dw.Write((byte)0);
+				dw.Write((byte)173);
+				dw.Write((byte)176);	
+				
+			} else {
+				dw.Write(header.Identifier); //source identifier - unique value set by the client, used by responses. If 0, responses are broadcast instead	
+			}
+			
 
 			#endregion Frame
 
@@ -107,7 +130,12 @@ namespace LifxEmulator {
 
 			//The target device address is 8 bytes long, when using the 6 byte MAC address then left - 
 			//justify the value and zero-fill the last two bytes. A target device address of all zeroes effectively addresses all devices on the local network
-			dw.Write(header.TargetMacAddress); // target mac address - 0 means all devices
+			if (type == 2) {
+				dw.Write(new byte[] {0, 0, 0, 0, 0, 0, 0, 0});
+			} else {
+				dw.Write(GetMacAddress());
+			}
+			
 			dw.Write(new byte[] {0, 0, 0, 0, 0, 0}); //reserved 1
 
 			//The client can use acknowledgements to determine that the LIFX device has received a message. 
@@ -153,7 +181,7 @@ namespace LifxEmulator {
 			dw.Flush();
 		}
 		
-		private static async Task<LifxResponse> ParseMessage(byte[] packet) {
+		private static async Task<LifxResponse> ParseMessage(byte[] packet, IPEndPoint ep) {
 			using MemoryStream ms = new MemoryStream(packet);
 			BinaryReader br = new BinaryReader(ms);
 			//frame
@@ -162,10 +190,10 @@ namespace LifxEmulator {
 				throw new Exception("Invalid packet");
 			br.ReadUInt16(); //origin:2, reserved:1, addressable:1, protocol:12
 			var source = br.ReadUInt32();
-			var header = new FrameHeader(source);
 			//frame address
 			byte[] target = br.ReadBytes(8);
-			  
+			var header = new FrameHeader(source);
+			header.TargetMacAddress = target;
 			ms.Seek(6, SeekOrigin.Current); //skip reserved
 			br.ReadByte(); //reserved:6, ack_required:1, res_required:1, 
 			header.Sequence = br.ReadByte();
@@ -173,9 +201,13 @@ namespace LifxEmulator {
 			var nanoseconds = br.ReadUInt64();
 			header.AtTime = Epoch.AddMilliseconds(nanoseconds * 0.000001);
 			var type = (MessageType) br.ReadUInt16();
-			Console.WriteLine($"Incoming type is {type}");
+			Console.WriteLine($"Received {type} from {ep.Address}.");
 			ms.Seek(2, SeekOrigin.Current); //skip reserved
-			var payload = new Payload(size > 36 ? br.ReadBytes(size - 36) : new byte[] { });
+			var bytes = size > 36 ? br.ReadBytes(size - 36) : new byte[] { };
+			var payload = new Payload(bytes);
+			var msg = string.Join(",", (from a in packet select a.ToString("X2")).ToArray());
+			Console.WriteLine("Payload: " + msg);
+		
 			if (type == MessageType.SetColorZones) {
 				var start = payload.GetUint8();
 				var end = payload.GetUint8();
@@ -188,16 +220,41 @@ namespace LifxEmulator {
 				Console.WriteLine("Colors: ");
 				for (var i = 0; i < 64; i++) {
 					var color = payload.GetColor();
-					Console.Write(i.ToString(), color.Color);
+					Console.WriteLine(i + " is " + color.ToHsbkString(), color.Color);
 				}
 				Console.WriteLine("");
 			}
-			var res = LifxResponse.Create(header, type, source,
+
+			var newHeader = new FrameHeader(GetNextIdentifier()) {TargetMacAddress = header.TargetMacAddress};
+			var res = LifxResponse.Create(newHeader, type, source,
 				payload,_deviceVersion);
 			await Task.FromResult(true);
 			return res;
 		}
+		
+		private static byte[] GetMacAddress()
+		{
+			var mac = new byte[] {0, 0, 0, 0, 0, 0, 0, 0};
+			NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();
+			if (interfaces.Length < 1) return mac;
+
+			foreach (NetworkInterface adapter in interfaces) {
+				if (adapter.NetworkInterfaceType != NetworkInterfaceType.Ethernet) {
+					continue;
+				}
+
+				var address = adapter.GetPhysicalAddress();
+				var bytes = address.GetAddressBytes().ToList();
+				bytes.Add(0);
+				bytes.Add(0); // Pad bytes
+				return bytes.ToArray();
+			}
+
+			return mac;
+		}
 	}
+	
+	
 	
 	internal class FrameHeader {
 		public uint Identifier;
@@ -212,6 +269,7 @@ namespace LifxEmulator {
 
 		public FrameHeader(uint id, bool acknowledgeRequired = false) {
 			Identifier = id;
+			AtTime = DateTime.Now;
 			AcknowledgeRequired = acknowledgeRequired;
 		}
 
@@ -220,84 +278,5 @@ namespace LifxEmulator {
 		}
 	}
 	
-	internal enum MessageType : ushort {
-		//Device Messages
-		DeviceGetService = 0x02,
-		DeviceStateService = 0x03,
-		//Undocumented?
-		DeviceGetTime = 0x04,
-		DeviceSetTime = 0x05,
-		DeviceStateTime = 0x06,
-		// Documented
-		DeviceGetHostInfo = 12,
-		DeviceStateHostInfo = 13,
-		DeviceGetHostFirmware = 14,
-		DeviceStateHostFirmware = 15,
-		DeviceGetWifiInfo = 16,
-		DeviceStateWifiInfo = 17,
-		DeviceGetWifiFirmware = 18,
-		DeviceStateWifiFirmware = 19,
-		DeviceGetPower = 20,
-		DeviceSetPower = 21,
-		DeviceStatePower = 22,
-		DeviceGetLabel = 23,
-		DeviceSetLabel = 24,
-		DeviceStateLabel = 25,
-		DeviceGetVersion = 32,
-		DeviceStateVersion = 33,
-		DeviceGetInfo = 34,
-		DeviceStateInfo = 35,
-		DeviceAcknowledgement = 45,
-		DeviceGetLocation = 48,
-		DeviceSetLocation = 49,
-		DeviceStateLocation = 50,
-		DeviceGetGroup = 51,
-		DeviceSetGroup = 52,
-		DeviceStateGroup = 53,
-		DeviceEchoRequest = 58,
-		DeviceEchoResponse = 59,
-
-		//Light messages
-		LightGet = 101,
-		LightSetColor = 102,
-		LightSetWaveform = 103,
-		LightState = 107,
-		LightGetPower = 116,
-		LightSetPower = 117,
-		LightStatePower = 118,
-		LightSetWaveformOptional = 119,
-
-		//Infrared
-		InfraredGet = 120,
-		InfraredState = 121,
-		InfraredSet = 122,
-
-		//Multi zone
-		SetColorZones = 501,
-		GetColorZones = 502,
-		StateZone = 503,
-		StateMultiZone = 506,
-		SetExtendedColorZones = 510,
-		GetExtendedColorZones = 511,
-		StateExtendedColorZones = 512,
-
-		//Tile
-		GetDeviceChain = 701,
-		StateDeviceChain = 702,
-		SetUserPosition = 703,
-		GetTileState64 = 707,
-		StateTileState64 = 711,
-		SetTileState64 = 715,
-
-		//Switch 
-		GetRelayPower = 816,
-		SetRelayPower = 817,
-		StateRelayPower = 818,
-
-		//Unofficial
-		LightGetTemperature = 0x6E,
-
-		//LightStateTemperature = 0x6f,
-		SetLightBrightness = 0x68
-	}
+	
 }
