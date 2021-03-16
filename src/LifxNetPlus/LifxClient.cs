@@ -27,6 +27,14 @@ namespace LifxNetPlus {
 		}
 
 		/// <summary>
+		/// Disposes the client
+		/// </summary>
+		public void Dispose() {
+			_isRunning = false;
+			_socket.Dispose();
+		}
+
+		/// <summary>
 		/// Creates a new LIFX client.
 		/// </summary>
 		/// <returns>client</returns>
@@ -77,36 +85,25 @@ namespace LifxNetPlus {
 					string.Join(",", (from a in data select a.ToString("X2")).ToArray()));
 		}
 
-		/// <summary>
-		/// Disposes the client
-		/// </summary>
-		public void Dispose() {
-			_isRunning = false;
-			_socket.Dispose();
-		}
-		
 		private Task<T> BroadcastMessageAsync<T>(LifxPacket packet) where T : LifxResponse {
-			
-			
 			Debug.WriteLine("Broadcasting discovery packet.");
 			return BroadcastPayloadAsync<T>("255.255.255.255", packet);
 		}
 
 		private Task<T> BroadcastMessageAsync<T>(Device device, LifxPacket packet) where T : LifxResponse {
-			
 			var hostname = "255.255.255.255";
-			
+
 			if (device != null) {
 				hostname = device.HostName;
 				if (packet.Type != MessageType.DeviceGetService) {
 					packet.Target = device.MacAddress;
 				}
 			}
-		
+
 			Debug.WriteLine("Broadcasting " + packet.Type + " to " + hostname);
 			return BroadcastPayloadAsync<T>(hostname, packet);
 		}
-		
+
 		private async Task<T> BroadcastPayloadAsync<T>(string host, LifxPacket packet)
 			where T : LifxResponse {
 			if (_socket == null)
@@ -148,17 +145,16 @@ namespace LifxNetPlus {
 
 			return result;
 		}
-		
-	
+
+
 		private static LifxResponse ParseMessage(byte[] packet) {
 			var fh = new LifxPacket(packet);
 			Debug.WriteLine("Incoming message: " + JsonConvert.SerializeObject(fh));
 			return LifxResponse.Create(fh);
 		}
 
-		
-		private static byte[] GetMacAddress()
-		{
+
+		private static byte[] GetMacAddress() {
 			var mac = new byte[] {0, 0, 0, 0, 0, 0, 0, 0};
 			NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();
 			if (interfaces.Length < 1) return mac;
@@ -180,12 +176,16 @@ namespace LifxNetPlus {
 	}
 
 	internal class FrameHeader {
-		public uint Identifier;
-		public byte Sequence;
+		public string TargetMacAddressName {
+			get { return string.Join(":", TargetMacAddress.Take(6).Select(tb => tb.ToString("X2")).ToArray()); }
+		}
+
 		public bool AcknowledgeRequired;
-		public bool ResponseRequired;
-		public byte[] TargetMacAddress = {0, 0, 0, 0, 0, 0, 0, 0};
 		public DateTime AtTime = DateTime.MinValue;
+		public uint Identifier;
+		public bool ResponseRequired;
+		public byte Sequence;
+		public byte[] TargetMacAddress = {0, 0, 0, 0, 0, 0, 0, 0};
 
 		public FrameHeader() {
 		}
@@ -193,10 +193,6 @@ namespace LifxNetPlus {
 		public FrameHeader(bool acknowledgeRequired = false) {
 			Identifier = MessageId.GetNextIdentifier();
 			AcknowledgeRequired = acknowledgeRequired;
-		}
-
-		public string TargetMacAddressName {
-			get { return string.Join(":", TargetMacAddress.Take(6).Select(tb => tb.ToString("X2")).ToArray()); }
 		}
 	}
 }

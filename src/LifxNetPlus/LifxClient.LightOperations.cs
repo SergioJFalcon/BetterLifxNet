@@ -55,7 +55,7 @@ namespace LifxNetPlus {
 			    duration < 0)
 				throw new ArgumentOutOfRangeException(nameof(duration));
 
-			
+
 			var b = BitConverter.GetBytes((ushort) duration);
 
 			Debug.WriteLine(
@@ -86,10 +86,10 @@ namespace LifxNetPlus {
 		/// <param name="duration">An optional transition duration, in milliseconds.</param>
 		/// <returns></returns>
 		public Task SetColorAsync(LightBulb bulb, LifxColor color, int duration = 0) {
-			return SetColorAsync(bulb, (ushort)color.LifxHue, (ushort)color.LifxSaturation, (ushort)color.LifxBrightness, (ushort)color.K, duration);
+			return SetColorAsync(bulb, (ushort) color.LifxHue, (ushort) color.LifxSaturation,
+				(ushort) color.LifxBrightness, (ushort) color.K, duration);
 		}
 
-		
 
 		/// <summary>
 		/// Sets color and temperature for a bulb and uses a transition time to the provided state

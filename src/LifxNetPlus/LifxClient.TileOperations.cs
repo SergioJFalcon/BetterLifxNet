@@ -13,7 +13,8 @@ namespace LifxNetPlus {
 		public async Task<StateDeviceChainResponse> GetDeviceChainAsync(Device group) {
 			if (group == null) throw new ArgumentNullException(nameof(group));
 
-			return await BroadcastMessageAsync<StateDeviceChainResponse>(group, new LifxPacket(MessageType.GetDeviceChain));
+			return await BroadcastMessageAsync<StateDeviceChainResponse>(group,
+				new LifxPacket(MessageType.GetDeviceChain));
 		}
 
 		/// <summary>

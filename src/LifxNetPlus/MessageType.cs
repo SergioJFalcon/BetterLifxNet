@@ -7,7 +7,7 @@
 		DeviceSetSite = 1,
 		DeviceGetService = 2,
 		DeviceStateService = 3,
-		
+
 		DeviceGetTime = 4,
 		DeviceSetTime = 5,
 		DeviceStateTime = 6,
@@ -16,7 +16,7 @@
 		DeviceGetDummyLoad = 9,
 		DeviceSetDummyLoad = 10,
 		DeviceStateDummyLoad = 11,
-		
+
 		DeviceGetHostInfo = 12,
 		DeviceStateHostInfo = 13,
 		DeviceGetHostFirmware = 14,
@@ -66,6 +66,7 @@
 		DeviceGetOnboardingFeedback = 96,
 		DeviceSetOnboardingFeedback = 97,
 		DeviceClearOnboardingFeedback = 98,
+
 		//Light messages
 		LightGet = 101,
 		LightSetColor = 102,
@@ -82,7 +83,7 @@
 		LightSetPower = 117,
 		LightStatePower = 118,
 		LightSetWaveformOptional = 119,
-		
+
 		//Infrared
 		LightGetInfrared = 120,
 		LightStateInfrared = 121,
@@ -99,7 +100,7 @@
 		LightStateHevCycleConfiguration = 147,
 		LightGetLastHevCycleResult = 148,
 		LightStateLastHevCycleResult = 150,
-		
+
 		// WAN
 		WanGet = 201,
 		WanSet = 202,
@@ -115,13 +116,13 @@
 		WanGetCloud = 212,
 		WanSetCloud = 213,
 		WanStateCloud = 214,
-		
+
 		// DevState?
 		DeviceStateUnhandled = 223,
 		DeviceGetGrouping = 224,
 		DeviceSetGrouping = 225,
 		DeviceStateGrouping = 226,
-		
+
 		//Wifi
 		WifiGet = 301,
 		WifiSet = 302,
@@ -132,7 +133,7 @@
 		WifiGetAccessPoint = 307,
 		WifiStateAccessPoint = 308,
 		WifiSetAccessPointBroadcast = 309,
-		
+
 		//Sensor
 		SensorGetAmbientLight = 401,
 		SensorStateAmbientLight = 402,
@@ -140,7 +141,7 @@
 		SensorStateDimmerVoltage = 404,
 		SensorGetPowerInstantaneous = 405,
 		SensorStatePowerInstantaneous = 406,
-		
+
 		//Multi zone
 		SetColorZones = 501,
 		GetColorZones = 502,
@@ -158,7 +159,7 @@
 		HomekitStatePairingCode = 602,
 		HomekitGetPairingStatus = 603,
 		HomekitStatePairingStatus = 604,
-		
+
 		//Tile
 		GetDeviceChain = 701,
 		StateDeviceChain = 702,

@@ -7,21 +7,25 @@ using System.Linq;
 namespace LifxNetPlus {
 	[Serializable]
 	public class LifxPacket {
-
-		public uint Identifier { get; set; }
-		public ushort Size { get; set; }
-		public const ushort Protocol = 1024;
+		public bool AcknowledgeRequired { get; set; }
 		public bool Addressable { get; set; }
+		public bool ResponseRequired { get; set; }
 		public bool Tagged { get; set; }
 		public byte Origin { get; set; }
-		public uint Source { get; set; }
-		public byte[] Target { get; set; }
-		public bool ResponseRequired { get; set; }
-		public bool AcknowledgeRequired { get; set; }
 		public byte Sequence { get; set; }
-		public MessageType Type { get; set; }
+		public byte[] Target { get; set; }
 		public DateTime AtTime { get; set; }
+		public MessageType Type { get; set; }
 		public Payload Payload { get; set; }
+
+		public string TargetMacAddressName {
+			get { return string.Join(":", Target.Take(6).Select(tb => tb.ToString("X2")).ToArray()); }
+		}
+
+		public uint Identifier { get; set; }
+		public uint Source { get; set; }
+		public ushort Size { get; set; }
+		public const ushort Protocol = 1024;
 
 		public LifxPacket(byte[] data) {
 			MemoryStream ms = new MemoryStream(data);
@@ -63,7 +67,7 @@ namespace LifxNetPlus {
 			AtTime = lifxPacket.AtTime;
 			Payload = lifxPacket.Payload;
 		}
-		
+
 		public LifxPacket(uint id, MessageType type, params object[] args) {
 			Identifier = MessageId.GetNextIdentifier();
 			Source = Identifier;
@@ -74,19 +78,19 @@ namespace LifxNetPlus {
 				Identifier = id;
 				Source = id;
 			}
-			Target = new byte[]{0, 0, 0, 0, 0, 0, 0, 0};
+
+			Target = new byte[] {0, 0, 0, 0, 0, 0, 0, 0};
 			Payload = new Payload(args);
 		}
-		
+
 		public LifxPacket(MessageType type, params object[] args) {
 			Identifier = MessageId.GetNextIdentifier();
 			Source = Identifier;
 			Type = type;
-			Target = new byte[]{0, 0, 0, 0, 0, 0, 0, 0};
+			Target = new byte[] {0, 0, 0, 0, 0, 0, 0, 0};
 			Payload = new Payload(args);
 		}
-		
-		
+
 
 		/// <summary>
 		/// Return our packet as a series of bytes
@@ -98,7 +102,7 @@ namespace LifxNetPlus {
 			Addressable = true;
 			var bytes = new List<byte>();
 			bytes.AddRange(BitConverter.GetBytes(Size));
-			var proto = BitConverter.GetBytes((ushort)1024);
+			var proto = BitConverter.GetBytes((ushort) 1024);
 			proto = SetBit(proto, 12, Addressable);
 			proto = SetBit(proto, 13, Tagged);
 			proto = SetBit(proto, 14, Origin == 1);
@@ -164,11 +168,5 @@ namespace LifxNetPlus {
 			bitArray.CopyTo(bytearray, 0);
 			return bytearray;
 		}
-
-		public string TargetMacAddressName {
-			get { return string.Join(":", Target.Take(6).Select(tb => tb.ToString("X2")).ToArray()); }
-		}
-
 	}
 }
-	

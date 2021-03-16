@@ -4,19 +4,19 @@ using System.Collections.Generic;
 namespace LifxNetPlus {
 	[Serializable]
 	public class Tile {
+		public byte Height { get; set; }
+		public byte Width { get; set; }
+		public float UserX { get; set; }
+		public float UserY { get; set; }
 		public short AccelMeasX { get; set; }
 		public short AccelMeasY { get; set; }
 		public short AccelMeasZ { get; set; }
-		public float UserX { get; set; }
-		public float UserY { get; set; }
-		public byte Width { get; set; }
-		public byte Height { get; set; }
-		public uint DeviceVersionVendor { get; set; }
 		public uint DeviceVersionProduct { get; set; }
+		public uint DeviceVersionVendor { get; set; }
 		public uint DeviceVersionVersion { get; set; }
 		public ulong FirmwareBuild { get; set; }
-		public ushort FirmwareVersionMinor { get; set; }
 		public ushort FirmwareVersionMajor { get; set; }
+		public ushort FirmwareVersionMinor { get; set; }
 
 		public Tile() {
 		}
@@ -42,7 +42,6 @@ namespace LifxNetPlus {
 		/// </summary>
 		/// <param name="payload"></param>
 		public void LoadBytes(Payload payload) {
-			
 			AccelMeasX = payload.GetInt16();
 			AccelMeasY = payload.GetInt16();
 			AccelMeasZ = payload.GetInt16();
@@ -84,6 +83,5 @@ namespace LifxNetPlus {
 
 			return output.ToArray();
 		}
-		
 	}
 }

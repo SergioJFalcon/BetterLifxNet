@@ -13,9 +13,9 @@ namespace ColorSendTest {
 		private static List<Device> _devicesBulb;
 		private static List<Device> _devicesMulti;
 		private static List<Device> _devicesMultiV2;
-		private static List<Device> _devicesTile;
 		private static List<Device> _devicesSwitch;
-		
+		private static List<Device> _devicesTile;
+
 		static async Task Main(string[] args) {
 			var tr1 = new TextWriterTraceListener(Console.Out);
 			_devicesBulb = new List<Device>();
@@ -39,15 +39,15 @@ namespace ColorSendTest {
 			if (_devicesMulti.Count > 0) {
 				Console.WriteLine("2: Multi Zone V1");
 			}
-			
+
 			if (_devicesMultiV2.Count > 0) {
 				Console.WriteLine("3: Multi Zone V2");
 			}
-			
+
 			if (_devicesTile.Count > 0) {
 				Console.WriteLine("4: Tiles");
 			}
-			
+
 			if (_devicesSwitch.Count > 0) {
 				Console.WriteLine("5: Switch");
 			}
@@ -104,7 +104,7 @@ namespace ColorSendTest {
 			}
 
 			await Task.Delay(500);
-			
+
 			foreach (var bulb in _devicesBulb.Cast<LightBulb>()) {
 				_client.SetColorAsync(bulb, red, 2700).ConfigureAwait(false);
 			}
@@ -133,7 +133,7 @@ namespace ColorSendTest {
 			foreach (var m in _devicesMulti) {
 				var state = await _client.GetPowerAsync(m);
 				stateList.Add(state);
-				var zoneState = await _client.GetColorZonesAsync(m,0,8);
+				var zoneState = await _client.GetColorZonesAsync(m, 0, 8);
 				responses.Add(zoneState);
 				_client.SetPowerAsync(m, 1).ConfigureAwait(false);
 			}
@@ -147,14 +147,15 @@ namespace ColorSendTest {
 				for (var i = start; i < count; i++) {
 					var pi = i * 1.0f;
 					var progress = (start - pi) / total;
-					var apply = i == count - 1; 
+					var apply = i == count - 1;
 					_client.SetColorZonesAsync(m, i, i, Rainbow(progress), TimeSpan.Zero, apply);
 				}
+
 				idx++;
 			}
-			
+
 			await Task.Delay(2000);
-			
+
 			idx = 0;
 			Debug.WriteLine("Setting v1 multi to rainbow!");
 			var black = new LifxColor(0, 0, 0);
@@ -166,9 +167,10 @@ namespace ColorSendTest {
 				for (var i = start; i < count; i++) {
 					_client.SetColorZonesAsync(m, i, i, black, TimeSpan.Zero, true);
 				}
+
 				idx++;
 			}
-			
+
 			idx = 0;
 			Debug.WriteLine("Setting v1 multi to black/disabling.");
 			foreach (var m in _devicesMulti) {
@@ -189,6 +191,7 @@ namespace ColorSendTest {
 				responses.Add(zoneState);
 				_client.SetPowerAsync(m, 1);
 			}
+
 			Debug.WriteLine("Setting devices to rainbow!");
 			var idx = 0;
 			foreach (var m in _devicesMulti) {
@@ -197,16 +200,17 @@ namespace ColorSendTest {
 				var start = state.Index;
 				var total = start - count;
 				var colors = new List<LifxColor>();
-				
+
 				for (var i = start; i < count; i++) {
 					var pi = i * 1.0f;
 					var progress = (start - pi) / total;
 					colors.Add(Rainbow(progress));
 				}
+
 				_client.SetExtendedColorZonesAsync(m, TimeSpan.Zero, start, colors, true);
 				idx++;
 			}
-			
+
 			await Task.Delay(2000);
 			Debug.WriteLine("Setting v2 to black.");
 
@@ -220,10 +224,11 @@ namespace ColorSendTest {
 				for (var i = start; i < count; i++) {
 					colors.Add(black);
 				}
-				_client.SetExtendedColorZonesAsync(m, TimeSpan.Zero, start, colors,true);
+
+				_client.SetExtendedColorZonesAsync(m, TimeSpan.Zero, start, colors, true);
 				idx++;
 			}
-			
+
 			idx = 0;
 			Debug.WriteLine("Resetting v2 multizone.");
 
@@ -256,22 +261,25 @@ namespace ColorSendTest {
 						colors[m * c] = col;
 					}
 				}
+
 				for (var i = state.StartIndex; i < state.TotalCount; i++) {
 					_client.SetTileState64Async(t, i, 1, 1000, colors.ToArray());
 				}
+
 				idx++;
 			}
 
 			await Task.Delay(2000);
-			
+
 			idx = 0;
 			Debug.WriteLine("Turning off tiles.");
 			foreach (var t in _devicesTile) {
 				var state = chains[idx];
 				var colors = new List<LifxColor>();
 				for (var c = 0; c < 64; c++) {
-					colors.Add(new LifxColor(0,0,0));
+					colors.Add(new LifxColor(0, 0, 0));
 				}
+
 				for (var i = state.StartIndex; i < state.TotalCount; i++) {
 					_client.SetTileState64Async(t, i, 1, 1000, colors.ToArray());
 				}
@@ -282,7 +290,6 @@ namespace ColorSendTest {
 		}
 
 		private static void FlashSwitches() {
-			
 		}
 
 		private static LifxColor Rainbow(float progress) {
@@ -300,55 +307,54 @@ namespace ColorSendTest {
 			};
 			return new LifxColor(output);
 		}
-		
-		private static void ClientDeviceLost(object sender, LifxClient.DeviceDiscoveryEventArgs e)
-        {
-            Console.WriteLine("Device lost");
-        }
 
-        private static async void ClientDeviceDiscovered(object sender, LifxClient.DeviceDiscoveryEventArgs e)
-        {
-            Console.WriteLine($"Device {e.Device.MacAddressName} found @ {e.Device.HostName}");
-            var version = await _client.GetDeviceVersionAsync(e.Device);
-            var added = false;
-            // Multi-zone devices
-            if (version.Product == 31 || version.Product == 32 || version.Product == 38) {
-                var extended = false;
-                // If new Z-LED or Beam, check if FW supports "extended" commands.
-                if (version.Product == 32 || version.Product == 38) {
-                    if (version.Version >= 1532997580) {
-                        extended = true;
-                    }
-                }
+		private static void ClientDeviceLost(object sender, LifxClient.DeviceDiscoveryEventArgs e) {
+			Console.WriteLine("Device lost");
+		}
 
-                if (extended) {
-	                added = true;
-	                Console.WriteLine("Adding V2 Multi zone Device.");
-	                _devicesMultiV2.Add(e.Device);
-                } else {
-	                added = true;
-	                Console.WriteLine("Adding V1 Multi zone Device.");
-                    _devicesMulti.Add(e.Device);
-                }
-            }
-            
-            // Tile
-            if (version.Product == 55) {
-	            added = true;
-	            Console.WriteLine("Adding Tile Device");
-                _devicesTile.Add(e.Device);
-            }
-            // Switch
-            if (version.Product == 70) {
-	            added = true;
-	            Console.WriteLine("Adding Switch Device.");
-                _devicesSwitch.Add(e.Device);
-            }
+		private static async void ClientDeviceDiscovered(object sender, LifxClient.DeviceDiscoveryEventArgs e) {
+			Console.WriteLine($"Device {e.Device.MacAddressName} found @ {e.Device.HostName}");
+			var version = await _client.GetDeviceVersionAsync(e.Device);
+			var added = false;
+			// Multi-zone devices
+			if (version.Product == 31 || version.Product == 32 || version.Product == 38) {
+				var extended = false;
+				// If new Z-LED or Beam, check if FW supports "extended" commands.
+				if (version.Product == 32 || version.Product == 38) {
+					if (version.Version >= 1532997580) {
+						extended = true;
+					}
+				}
 
-            if (!added) {
-	            Console.WriteLine("Adding Bulb.");
-	            _devicesBulb.Add(e.Device);
-            }
-        }
+				if (extended) {
+					added = true;
+					Console.WriteLine("Adding V2 Multi zone Device.");
+					_devicesMultiV2.Add(e.Device);
+				} else {
+					added = true;
+					Console.WriteLine("Adding V1 Multi zone Device.");
+					_devicesMulti.Add(e.Device);
+				}
+			}
+
+			// Tile
+			if (version.Product == 55) {
+				added = true;
+				Console.WriteLine("Adding Tile Device");
+				_devicesTile.Add(e.Device);
+			}
+
+			// Switch
+			if (version.Product == 70) {
+				added = true;
+				Console.WriteLine("Adding Switch Device.");
+				_devicesSwitch.Add(e.Device);
+			}
+
+			if (!added) {
+				Console.WriteLine("Adding Bulb.");
+				_devicesBulb.Add(e.Device);
+			}
+		}
 	}
 }

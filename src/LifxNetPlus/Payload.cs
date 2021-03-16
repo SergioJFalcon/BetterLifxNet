@@ -13,15 +13,20 @@ namespace LifxNetPlus {
 	/// at which time a message will be logged. Should eventually throw an error or something...
 	/// </summary>
 	public class Payload {
-		private readonly List<byte> _data;
-		private readonly BinaryReader _br;
-		private readonly MemoryStream _ms;
-		private readonly long _len;
-
 		/// <summary>
 		/// Get the length of the internal byte array
 		/// </summary>
 		public int Length => _data.Count;
+
+		/// <summary>
+		/// Get the current position of the array
+		/// </summary>
+		public int Position => (int) _ms.Position;
+
+		private readonly BinaryReader _br;
+		private readonly List<byte> _data;
+		private readonly long _len;
+		private readonly MemoryStream _ms;
 
 
 		/// <summary>
@@ -47,7 +52,7 @@ namespace LifxNetPlus {
 						Add(b);
 						break;
 					case ushort @ushort:
-						Add((byte)@ushort);
+						Add((byte) @ushort);
 						break;
 					case uint u:
 						Add(u);
@@ -109,11 +114,6 @@ namespace LifxNetPlus {
 			_len = _ms.Length;
 			_br = new BinaryReader(_ms);
 		}
-
-		/// <summary>
-		/// Get the current position of the array
-		/// </summary>
-		public int Position => (int) _ms.Position;
 
 		/// <summary>
 		/// Return our base byte list as an array
@@ -417,6 +417,6 @@ namespace LifxNetPlus {
 			Add(input.FirmwareVersionMinor);
 			Add(input.FirmwareVersionMajor);
 			Add((uint) 0);
-		} 
+		}
 	}
 }

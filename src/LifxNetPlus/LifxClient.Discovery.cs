@@ -8,15 +8,20 @@ using System.Threading.Tasks;
 
 namespace LifxNetPlus {
 	public partial class LifxClient {
-		
-		private uint _discoverSourceId;
-		private CancellationTokenSource? _discoverCancellationSource;
+		/// <summary>
+		/// Gets a list of currently known devices
+		/// </summary>
+		public IEnumerable<Device> Devices => devices;
+
 		private readonly Dictionary<string, Device> _discoveredBulbs = new Dictionary<string, Device>();
 		private readonly int[] _stripIds = {31, 32, 38};
-		private readonly int[] _tileIds = {55};
 		private readonly int[] _switchIds = {70};
+		private readonly int[] _tileIds = {55};
+		private CancellationTokenSource? _discoverCancellationSource;
+		private uint _discoverSourceId;
 
-		
+		private IList<Device> devices = new List<Device>();
+
 
 		/// <summary>
 		/// Event fired when a LIFX bulb is discovered on the network
@@ -27,25 +32,6 @@ namespace LifxNetPlus {
 		/// Event fired when a LIFX bulb hasn't been seen on the network for a while (for more than 5 minutes)
 		/// </summary>
 		public event EventHandler<DeviceDiscoveryEventArgs>? DeviceLost;
-
-		private IList<Device> devices = new List<Device>();
-
-		/// <summary>
-		/// Gets a list of currently known devices
-		/// </summary>
-		public IEnumerable<Device> Devices => devices;
-
-		/// <summary>
-		/// Event args for <see cref="LifxClient.DeviceDiscovered"/> and <see cref="LifxClient.DeviceLost"/> events.
-		/// </summary>
-		public sealed class DeviceDiscoveryEventArgs : EventArgs {
-			internal DeviceDiscoveryEventArgs(Device device) => Device = device;
-
-			/// <summary>
-			/// The device the event relates to
-			/// </summary>
-			public Device Device { get; }
-		}
 
 		private void ProcessDeviceDiscoveryMessage(IPAddress remoteAddress, StateServiceResponse msg) {
 			string id = msg.TargetMacAddressName;
@@ -62,7 +48,7 @@ namespace LifxNetPlus {
 			    _discoverCancellationSource == null ||
 			    _discoverCancellationSource.IsCancellationRequested) {
 				Debug.WriteLine("Source mismatch or cancellation...");
-				return;	
+				return;
 			}
 
 			var address = remoteAddress.ToString();
@@ -102,9 +88,8 @@ namespace LifxNetPlus {
 				await BroadcastMessageAsync<UnknownResponse>(discoPacket);
 				while (!token.IsCancellationRequested) {
 					try {
-						  //await BroadcastMessageAsync<UnknownResponse>(null, header,
-						  //MessageType.DeviceGetService);
-						
+						//await BroadcastMessageAsync<UnknownResponse>(null, header,
+						//MessageType.DeviceGetService);
 					} catch (Exception e) {
 						Debug.WriteLine("Broadcast exception: " + e.Message + e.StackTrace);
 					}
@@ -133,6 +118,18 @@ namespace LifxNetPlus {
 				return;
 			_discoverCancellationSource.Cancel();
 			_discoverCancellationSource = null;
+		}
+
+		/// <summary>
+		/// Event args for <see cref="LifxClient.DeviceDiscovered"/> and <see cref="LifxClient.DeviceLost"/> events.
+		/// </summary>
+		public sealed class DeviceDiscoveryEventArgs : EventArgs {
+			/// <summary>
+			/// The device the event relates to
+			/// </summary>
+			public Device Device { get; }
+
+			internal DeviceDiscoveryEventArgs(Device device) => Device = device;
 		}
 	}
 }

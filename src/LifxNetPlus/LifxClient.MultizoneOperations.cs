@@ -17,7 +17,7 @@ namespace LifxNetPlus {
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public async Task SetColorZonesAsync(Device device, int startIndex, int endIndex, LifxColor color,
-			TimeSpan transitionDuration, bool apply=false) {
+			TimeSpan transitionDuration, bool apply = false) {
 			if (device == null)
 				throw new ArgumentNullException(nameof(device));
 			if (transitionDuration.TotalMilliseconds > uint.MaxValue ||
@@ -61,6 +61,7 @@ namespace LifxNetPlus {
 			foreach (var color in colors) {
 				colorBytes.AddRange(color.ToBytes());
 			}
+
 			var doApply = apply ? 0x01 : 0x00;
 			var packet = new LifxPacket(MessageType.SetExtendedColorZones) {
 				Payload = new Payload(new object[] {duration, doApply, index, count, colorBytes})
@@ -95,7 +96,7 @@ namespace LifxNetPlus {
 			var packet = new LifxPacket(MessageType.GetColorZones, (byte) startIndex, (byte) endIndex);
 			return BroadcastMessageAsync<StateMultiZoneResponse>(device, packet);
 		}
-		
+
 		/// <summary>
 		/// Try to get the color zone from our device, non-extended.
 		/// </summary>
