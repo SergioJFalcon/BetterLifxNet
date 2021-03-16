@@ -10,13 +10,13 @@ namespace LifxNetPlus {
 		/// <param name="relayIndex">The relay on the switch starting from 0</param>
 		/// <returns>A StateRelayPower message.</returns>
 		/// <exception cref="ArgumentNullException"></exception>
-		public async Task<StateRelayPowerResponse> GetRelayPowerAsync(Device device, int relayIndex) {
-			if (device == null)
-				throw new ArgumentNullException(nameof(device));
+		public async Task<StateRelayPowerResponse> GetRelayPowerAsync(Device device, int relayIndex = 0) {
+			if (device == null) throw new ArgumentNullException(nameof(device));
 
-			FrameHeader header = new FrameHeader(GetNextIdentifier());
+			FrameHeader header = new FrameHeader();
+			var packet = new LifxPacket(MessageType.GetRelayPower, (byte) relayIndex);
 			return await BroadcastMessageAsync<StateRelayPowerResponse>(
-				device, header, MessageType.GetRelayPower, (byte) relayIndex);
+				device, new LifxPacket(MessageType.GetRelayPower));
 		}
 
 		/// <summary>
@@ -30,13 +30,11 @@ namespace LifxNetPlus {
 		/// <returns>A StateRelayPower message.</returns>
 		/// <exception cref="ArgumentNullException"></exception>
 		public async Task<StateRelayPowerResponse> SetRelayPowerAsync(Device device, int relayIndex, bool enable) {
-			if (device == null)
-				throw new ArgumentNullException(nameof(device));
+			if (device == null) throw new ArgumentNullException(nameof(device));
 			var level = enable ? 65535 : 0;
 
-			FrameHeader header = new FrameHeader(GetNextIdentifier());
-			return await BroadcastMessageAsync<StateRelayPowerResponse>(
-				device, header, MessageType.SetRelayPower, (byte) relayIndex, (ushort) level);
+			var packet = new LifxPacket(MessageType.SetRelayPower, (byte) relayIndex, (ushort) level);
+			return await BroadcastMessageAsync<StateRelayPowerResponse>(device, packet);
 		}
 	}
 }

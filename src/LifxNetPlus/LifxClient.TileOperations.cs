@@ -11,12 +11,9 @@ namespace LifxNetPlus {
 		/// <param name="group"></param>
 		/// <returns>StateDeviceChainResponse</returns>
 		public async Task<StateDeviceChainResponse> GetDeviceChainAsync(Device group) {
-			if (group == null)
-				throw new ArgumentNullException(nameof(group));
+			if (group == null) throw new ArgumentNullException(nameof(group));
 
-			FrameHeader header = new FrameHeader(GetNextIdentifier());
-			return await BroadcastMessageAsync<StateDeviceChainResponse>(
-				group, header, MessageType.GetDeviceChain);
+			return await BroadcastMessageAsync<StateDeviceChainResponse>(group, new LifxPacket(MessageType.GetDeviceChain));
 		}
 
 		/// <summary>
@@ -28,13 +25,10 @@ namespace LifxNetPlus {
 		/// <param name="userY"></param>
 		/// <returns></returns>
 		public async Task SetUserPositionAsync(Device group, int tileIndex, float userX, float userY) {
-			if (group == null)
-				throw new ArgumentNullException(nameof(group));
+			if (group == null) throw new ArgumentNullException(nameof(group));
 
-			FrameHeader header = new FrameHeader(GetNextIdentifier());
-
-			await BroadcastMessageAsync<AcknowledgementResponse>(group, header,
-				MessageType.SetUserPosition, tileIndex, Reserved, userX, userY).ConfigureAwait(false);
+			var packet = new LifxPacket(MessageType.SetUserPosition, tileIndex, Reserved, userX, userY);
+			await BroadcastMessageAsync<AcknowledgementResponse>(group, packet).ConfigureAwait(false);
 		}
 
 		///  <summary>
@@ -53,12 +47,9 @@ namespace LifxNetPlus {
 		///  <returns>StateTileState64Response</returns>
 		public async Task<StateTileState64Response> GetTileState64Async(Device device, int tileIndex, int length,
 			int x = 0, int y = 0, int width = 8) {
-			if (device == null)
-				throw new ArgumentNullException(nameof(device));
-
-			FrameHeader header = new FrameHeader(GetNextIdentifier());
-			return await BroadcastMessageAsync<StateTileState64Response>(
-				device, header, MessageType.GetTileState64, tileIndex, length, Reserved, x, y, width);
+			if (device == null) throw new ArgumentNullException(nameof(device));
+			var packet = new LifxPacket(MessageType.GetTileState64, tileIndex, length, Reserved, x, y, width);
+			return await BroadcastMessageAsync<StateTileState64Response>(device, packet);
 		}
 
 		///  <summary>
@@ -79,13 +70,12 @@ namespace LifxNetPlus {
 		///  <returns>StateTileState64Response</returns>
 		public async Task<StateTileState64Response> SetTileState64Async(Device device, int tileIndex, int length,
 			long duration, LifxColor[] colors, int x = 0, int y = 0, int width = 8) {
-			if (device == null)
-				throw new ArgumentNullException(nameof(device));
+			if (device == null) throw new ArgumentNullException(nameof(device));
 
-			FrameHeader header = new FrameHeader(GetNextIdentifier());
-			return await BroadcastMessageAsync<StateTileState64Response>(
-				device, header, MessageType.SetTileState64, (byte) tileIndex, (byte) length, (byte) Reserved, (byte) x, (byte) y, (byte) width, (uint) duration,
+			var packet = new LifxPacket(MessageType.SetTileState64, (byte) tileIndex, (byte) length, (byte) Reserved,
+				(byte) x, (byte) y, (byte) width, (uint) duration,
 				colors);
+			return await BroadcastMessageAsync<StateTileState64Response>(device, packet);
 		}
 	}
 }

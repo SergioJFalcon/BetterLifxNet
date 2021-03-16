@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using LifxNetPlus;
 using Newtonsoft.Json;
 
@@ -32,8 +33,11 @@ namespace SampleApp.netcore
 
             
             var foo1 = await _client.GetDeviceOwnerAsync(e.Device);
-            Console.WriteLine("Owner is " + foo1.Owner.ToString() + ", label is " + foo1.Label.ToString());
-
+            Console.WriteLine("Owner: " + 
+                string.Join(",", (from a in foo1.Owner select a.ToString("X2")).ToArray()));
+            Console.WriteLine("Label: " + 
+                string.Join(",", (from a in foo1.Label select a.ToString("X2")).ToArray()));
+            
             
             var wifi = await _client.GetWifiFirmwareAsync(e.Device);
             Console.WriteLine("Wifi info: " + JsonConvert.SerializeObject(wifi));

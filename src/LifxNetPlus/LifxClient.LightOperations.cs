@@ -55,16 +55,13 @@ namespace LifxNetPlus {
 			    duration < 0)
 				throw new ArgumentOutOfRangeException(nameof(duration));
 
-			FrameHeader header = new FrameHeader(GetNextIdentifier(), true);
-
+			
 			var b = BitConverter.GetBytes((ushort) duration);
 
 			Debug.WriteLine(
 				$"Sending LightSetPower(on={isOn},duration={duration}ms) to {bulb}");
-
-			await BroadcastMessageAsync<AcknowledgementResponse>(bulb, header, MessageType.LightSetPower,
-				(ushort) (isOn ? 65535 : 0), b
-			).ConfigureAwait(false);
+			var packet = new LifxPacket(MessageType.LightSetPower, (ushort) (isOn ? 65535 : 0), b);
+			await BroadcastMessageAsync<AcknowledgementResponse>(bulb, packet).ConfigureAwait(false);
 		}
 
 		/// <summary>
@@ -76,9 +73,9 @@ namespace LifxNetPlus {
 			if (bulb == null)
 				throw new ArgumentNullException(nameof(bulb));
 
-			FrameHeader header = new FrameHeader(GetNextIdentifier(), true);
+			var packet = new LifxPacket(MessageType.LightGetPower);
 			return (await BroadcastMessageAsync<LightPowerResponse>(
-				bulb, header, MessageType.LightGetPower).ConfigureAwait(false)).IsOn;
+				bulb, packet).ConfigureAwait(false)).IsOn;
 		}
 
 		/// <summary>
@@ -120,13 +117,9 @@ namespace LifxNetPlus {
 			}
 
 			Debug.WriteLine("Setting color to {0}", bulb);
-			FrameHeader header = new FrameHeader(GetNextIdentifier(), true);
-			
-			await BroadcastMessageAsync<AcknowledgementResponse>(bulb, header,
-				MessageType.LightSetColor, (byte) 0x00, //reserved
-				hue, saturation, brightness, kelvin, //HSBK
-				duration
-			);
+			var packet = new LifxPacket(MessageType.LightSetColor);
+			packet.Payload = new Payload(new object[] {0x00, hue, saturation, brightness, kelvin, duration});
+			await BroadcastMessageAsync<AcknowledgementResponse>(bulb, packet);
 		}
 
 
@@ -137,11 +130,8 @@ namespace LifxNetPlus {
 			    duration < 0)
 				throw new ArgumentOutOfRangeException(nameof(duration));
 
-			FrameHeader header = new FrameHeader(GetNextIdentifier(), true);
-			
-			await BroadcastMessageAsync<AcknowledgementResponse>(bulb, header,
-				MessageType.SetLightBrightness, brightness, duration
-			);
+			var packet = new LifxPacket(MessageType.SetLightBrightness, brightness, duration);
+			await BroadcastMessageAsync<AcknowledgementResponse>(bulb, packet);
 		}
 
 		/// <summary>
@@ -150,11 +140,8 @@ namespace LifxNetPlus {
 		/// <param name="bulb"></param>
 		/// <returns></returns>
 		public async Task<LightStateResponse> GetLightStateAsync(LightBulb bulb) {
-			if (bulb == null)
-				throw new ArgumentNullException(nameof(bulb));
-			FrameHeader header = new FrameHeader(GetNextIdentifier());
-			return await BroadcastMessageAsync<LightStateResponse>(
-				bulb, header, MessageType.LightGet);
+			if (bulb == null) throw new ArgumentNullException(nameof(bulb));
+			return await BroadcastMessageAsync<LightStateResponse>(bulb, new LifxPacket(MessageType.LightGet));
 		}
 
 
@@ -164,12 +151,10 @@ namespace LifxNetPlus {
 		/// <param name="bulb"></param>
 		/// <returns></returns>
 		public async Task<ushort> GetInfraredAsync(LightBulb bulb) {
-			if (bulb == null)
-				throw new ArgumentNullException(nameof(bulb));
-
-			FrameHeader header = new FrameHeader(GetNextIdentifier());
+			if (bulb == null) throw new ArgumentNullException(nameof(bulb));
+			var packet = new LifxPacket(MessageType.LightGetInfrared);
 			return (await BroadcastMessageAsync<InfraredStateResponse>(
-				bulb, header, MessageType.LightGetInfrared).ConfigureAwait(false)).Brightness;
+				bulb, packet).ConfigureAwait(false)).Brightness;
 		}
 
 		/// <summary>
@@ -179,13 +164,9 @@ namespace LifxNetPlus {
 		/// <param name="brightness"></param>
 		/// <returns></returns>
 		public async Task SetInfraredAsync(Device device, ushort brightness) {
-			if (device == null)
-				throw new ArgumentNullException(nameof(device));
-			Debug.WriteLine($"Sending SetInfrared({brightness}) to {device.HostName}");
-			FrameHeader header = new FrameHeader(GetNextIdentifier(), true);
-
-			await BroadcastMessageAsync<AcknowledgementResponse>(device, header,
-				MessageType.LightSetInfrared, brightness).ConfigureAwait(false);
+			if (device == null) throw new ArgumentNullException(nameof(device));
+			var packet = new LifxPacket(MessageType.LightSetInfrared, brightness);
+			await BroadcastMessageAsync<AcknowledgementResponse>(device, packet).ConfigureAwait(false);
 		}
 	}
 }

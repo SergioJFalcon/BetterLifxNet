@@ -6,89 +6,86 @@ namespace LifxEmulator {
 	/// <summary>
 	/// Base class for LIFX response types
 	/// </summary>
-	public abstract class LifxResponse {
-		internal static LifxResponse Create(FrameHeader header, MessageType type, uint source, Payload payload, int deviceVersion) {
-			payload.Reset();
-			switch (type) {
+	public abstract class LifxResponse : LifxPacket {
+		internal static LifxResponse Create(LifxPacket packet, int deviceVersion) {
+			packet.Payload.Reset();
+			var newPacket = new LifxPacket(MessageType.DeviceAcknowledgement);
+			switch (packet.Type) {
 				case MessageType.DeviceGetService:
-					type = MessageType.DeviceStateService;
-					return new StateServiceResponse(header, type, source);
+					newPacket.Type = MessageType.DeviceStateService;
+					newPacket.Addressable = true;
+					return new StateServiceResponse(newPacket);
 				case MessageType.DeviceEchoRequest:
-					type = MessageType.DeviceEchoResponse;
-					return new EchoResponse(header, type, payload, source);
+					newPacket.Type = MessageType.DeviceEchoResponse;
+					return new EchoResponse(newPacket);
 				case MessageType.DeviceGetInfo:
-					type = MessageType.DeviceStateInfo;
-					return new StateInfoResponse(header, type, source);
+					newPacket.Type = MessageType.DeviceStateInfo;
+					return new StateInfoResponse(newPacket);
 				case MessageType.LightGet:
-					type = MessageType.LightState;
-					return new LightStateResponse(header, type, source);
+					newPacket.Type = MessageType.LightState;
+					return new LightStateResponse(newPacket);
 				case MessageType.DeviceGetVersion:
-					type = MessageType.DeviceStateVersion;
-					return new StateVersionResponse(header, type, source, deviceVersion);
+					newPacket.Type = MessageType.DeviceStateVersion;
+					return new StateVersionResponse(newPacket, deviceVersion);
 				case MessageType.DeviceGetHostFirmware:
-					type = MessageType.DeviceStateHostFirmware;
-					return new StateHostFirmwareResponse(header, type, source, deviceVersion);
+					newPacket.Type = MessageType.DeviceStateHostFirmware;
+					return new StateHostFirmwareResponse(newPacket, deviceVersion);
 				case MessageType.DeviceGetWifiFirmware:
-					type = MessageType.DeviceStateWifiFirmware;
-					return new StateWifiFirmwareResponse(header, type, source);
+					newPacket.Type = MessageType.DeviceStateWifiFirmware;
+					return new StateWifiFirmwareResponse(newPacket);
 				case MessageType.GetExtendedColorZones:
-					type = MessageType.StateExtendedColorZones;
-					return new StateExtendedColorZonesResponse(header, type, source);
+					newPacket.Type = MessageType.StateExtendedColorZones;
+					return new StateExtendedColorZonesResponse(newPacket);
 				case MessageType.GetColorZones:
-					type = MessageType.StateMultiZone;
-					return new StateMultiZoneResponse(header, type, source);
+					newPacket.Type = MessageType.StateMultiZone;
+					return new StateMultiZoneResponse(newPacket);
 				case MessageType.GetDeviceChain:
-					type = MessageType.StateDeviceChain;
-					return new StateDeviceChainResponse(header, type, source);
+					newPacket.Type = MessageType.StateDeviceChain;
+					return new StateDeviceChainResponse(newPacket);
 				case MessageType.GetRelayPower:
-					type = MessageType.StateRelayPower;
-					return new StateRelayPowerResponse(header, type, source);
+					newPacket.Type = MessageType.StateRelayPower;
+					return new StateRelayPowerResponse(newPacket);
 				case MessageType.DeviceGetPower:
-					type = MessageType.DeviceStatePower;
-					return new StatePowerResponse(header, type, source);
+					newPacket.Type = MessageType.DeviceStatePower;
+					return new StatePowerResponse(newPacket);
 				case MessageType.DeviceSetPower:
-					type = MessageType.DeviceAcknowledgement;
-					return new AcknowledgementResponse(header, type, source);
+					newPacket.Type = MessageType.DeviceAcknowledgement;
+					return new AcknowledgementResponse(newPacket);
 				case MessageType.DeviceGetLabel:
-					type = MessageType.DeviceStateLabel;
-					return new StateLabelResponse(header, type, source);
+					newPacket.Type = MessageType.DeviceStateLabel;
+					return new StateLabelResponse(newPacket);
 				case MessageType.DeviceGetLocation:
-					type = MessageType.DeviceStateLocation;
-					return new StateLocationResponse(header, type, source);
+					newPacket.Type = MessageType.DeviceStateLocation;
+					return new StateLocationResponse(newPacket);
 				case MessageType.DeviceGetGroup:
-					type = MessageType.DeviceStateGroup;
-					return new StateGroupResponse(header, type, source);
+					newPacket.Type = MessageType.DeviceStateGroup;
+					return new StateGroupResponse(newPacket);
 				case MessageType.DeviceGetWifiInfo:
-					type = MessageType.DeviceStateWifiInfo;
-					return new StateWifiInfoResponse(header, type, source);
+					newPacket.Type = MessageType.DeviceStateWifiInfo;
+					return new StateWifiInfoResponse(newPacket);
 				case MessageType.DeviceGetOwner:
-					type = MessageType.DeviceStateOwner;
-					return new StateOwnerResponse(header, type, source);
+					newPacket.Type = MessageType.DeviceStateOwner;
+					return new StateOwnerResponse(newPacket);
 				case MessageType.WanGet:
-						type = MessageType.WanState;
-						return new StateWanResponse(header, type, source);
+					newPacket.Type = MessageType.WanState;
+					return new StateWanResponse(newPacket);
 				case MessageType.TileGetEffect:
-					type = MessageType.TileStateEffect;
-					return new StateTileEffectResponse(header, type, source);
+					newPacket.Type = MessageType.TileStateEffect;
+					return new StateTileEffectResponse(newPacket);
 				case MessageType.GetTileTapConfig:
-					type = MessageType.StateTileTapConfig;
-					return new StateTileTapConfigResponse(header, type, source);
+					newPacket.Type = MessageType.StateTileTapConfig;
+					return new StateTileTapConfigResponse(newPacket);
 				default:
-					type = MessageType.DeviceAcknowledgement;
-					return new AcknowledgementResponse(header, type, source);
+					newPacket.Type = MessageType.DeviceAcknowledgement;
+					return new AcknowledgementResponse(newPacket);
 			}
 		}
 
-		internal LifxResponse(FrameHeader header, MessageType type, uint source) {
-			Header = header;
-			Type = type;
-			Source = source;
+		internal LifxResponse(LifxPacket packet) : base(packet) {
+			Packet = packet;
 		}
 
-		internal FrameHeader Header { get; }
-		internal Payload Payload { get; set; }
-		internal MessageType Type { get; }
-		internal uint Source { get; }
+		internal LifxPacket Packet { get; }
 	}
 	
 	/// <summary>
@@ -97,8 +94,8 @@ namespace LifxEmulator {
 	/// If the Service is temporarily unavailable, then the port value will be 0.
 	/// </summary>
 	internal class StateServiceResponse : LifxResponse {
-		internal StateServiceResponse(FrameHeader header, MessageType type, uint source) : base(
-			header, type, source) {
+		internal StateServiceResponse(LifxPacket newPacket) : base(
+			newPacket) {
 			Service = 1;
 			Port = 56700;
 			Payload = new Payload(new object[]{Service, Port});
@@ -112,8 +109,8 @@ namespace LifxEmulator {
 	/// State Tile Tap Config
 	/// </summary>
 	internal class StateTileTapConfigResponse : LifxResponse {
-		internal StateTileTapConfigResponse(FrameHeader header, MessageType type, uint source) : base(
-			header, type, source) {
+		internal StateTileTapConfigResponse(LifxPacket newPacket) : base(
+			newPacket) {
 		}
 	}
 	
@@ -121,8 +118,8 @@ namespace LifxEmulator {
 	/// Response to a state tile get request 
 	/// </summary>
 	internal class StateTileEffectResponse : LifxResponse {
-		internal StateTileEffectResponse(FrameHeader header, MessageType type, uint source) : base(
-			header, type, source) {
+		internal StateTileEffectResponse(LifxPacket newPacket) : base(
+			newPacket) {
 		}
 	}
 
@@ -131,12 +128,14 @@ namespace LifxEmulator {
 	/// Response to GetLabel message. Provides device label.
 	/// </summary>
 	public class StateOwnerResponse : LifxResponse {
-		internal StateOwnerResponse(FrameHeader header, MessageType type, uint source) : base(header,
-			type, source) {
-			Owner = "Digitalhigh     ";
-			Label = Owner;
+		internal StateOwnerResponse(LifxPacket newPacket) : base(newPacket) {
+			var oBytes = new byte[] {0xEC, 0x30, 0x7E, 0x9A, 0xAE, 0xC9, 0x4F, 0x72, 0xB3, 0xF8, 0xE7, 
+				0x38, 0x44, 0x04, 0x4A, 0x4A};
+			var lBytes = new byte[] {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+				0x00, 0x00, 0x00, 0x00, 0x00};
 			Updated = DateTime.Now;
-			Payload = new Payload(new object[] {Owner, Label, Updated });
+			var res = (ushort) 0;
+			Payload = new Payload(new object[] {(byte) 0, oBytes, lBytes, res, Updated});
 		}
 
 		public string? Owner { get; }
@@ -149,8 +148,7 @@ namespace LifxEmulator {
 	/// public enum Status {
 	/// </summary>
 	public class StateWanResponse : LifxResponse {
-		internal StateWanResponse(FrameHeader header, MessageType type, uint source) : base(header,
-			type, source) {
+		internal StateWanResponse(LifxPacket newPacket) : base(newPacket) {
 			State = 1;
 			Payload = new Payload(new object[] {State});
 		}
@@ -163,8 +161,8 @@ namespace LifxEmulator {
 	/// Response to any message sent with ack_required set to 1. 
 	/// </summary>
 	internal class AcknowledgementResponse : LifxResponse {
-		internal AcknowledgementResponse(FrameHeader header, MessageType type, uint source) : base(
-			header, type, source) {
+		internal AcknowledgementResponse(LifxPacket newPacket) : base(
+			newPacket) {
 		}
 	}
 
@@ -172,8 +170,8 @@ namespace LifxEmulator {
 	/// Get the list of colors currently being displayed by zones
 	/// </summary>
 	public class StateMultiZoneResponse : LifxResponse {
-		internal StateMultiZoneResponse(FrameHeader header, MessageType type, uint source) : base(
-			header, type, source) {
+		internal StateMultiZoneResponse(LifxPacket newPacket) : base(
+			newPacket) {
 			Count = 8;
 			Index = 0;
 			Colors = new LifxColor[Count];
@@ -203,8 +201,7 @@ namespace LifxEmulator {
 	}
 	
 	public class StateWifiInfoResponse : LifxResponse {
-		internal StateWifiInfoResponse(FrameHeader header, MessageType type, uint source) : base(header,
-			type, source) {
+		internal StateWifiInfoResponse(LifxPacket newPacket) : base(newPacket) {
 			Signal = 20;
 			Tx = 666;
 			Rx = 777;
@@ -235,8 +232,7 @@ namespace LifxEmulator {
 	/// Provides Wifi subsystem information.
 	/// </summary>
 	public class StateWifiFirmwareResponse : LifxResponse {
-		internal StateWifiFirmwareResponse(FrameHeader header, MessageType type, uint source) : base(header,
-			type, source) {
+		internal StateWifiFirmwareResponse(LifxPacket newPacket) : base(newPacket) {
 			Build = DateTime.Now;
 			ulong reserved = 0;
 			VersionMinor = 3;
@@ -264,8 +260,7 @@ namespace LifxEmulator {
 	/// Response to GetLabel message. Provides device label.
 	/// </summary>
 	internal class StateLabelResponse : LifxResponse {
-		internal StateLabelResponse(FrameHeader header, MessageType type, uint source) : base(header,
-			type, source) {
+		internal StateLabelResponse(LifxPacket newPacket) : base(newPacket) {
 			Label = "Emulator";
 			Payload = new Payload(new object[] {Label});
 		}
@@ -277,8 +272,7 @@ namespace LifxEmulator {
 	/// Provides run-time information of device.
 	/// </summary>
 	public class StateInfoResponse : LifxResponse {
-		internal StateInfoResponse(FrameHeader header, MessageType type, uint source) : base(header,
-			type, source) {
+		internal StateInfoResponse(LifxPacket newPacket) : base(newPacket) {
 			Time = DateTime.Now;
 			Uptime = 5000;
 			Downtime = 100000;
@@ -307,10 +301,8 @@ namespace LifxEmulator {
 	/// Echo response with payload sent in the EchoRequest.
 	/// </summary>
 	public class EchoResponse : LifxResponse {
-		internal EchoResponse(FrameHeader header, MessageType type, Payload payload, uint source) : base(header,
-			type, source) {
-			RequestPayload = payload.ToArray();
-			Payload = payload;
+		internal EchoResponse(LifxPacket newPacket) : base(newPacket) {
+			RequestPayload = Payload.ToArray();
 		}
 
 		/// <summary>
@@ -324,9 +316,7 @@ namespace LifxEmulator {
 	/// The StateZone message represents the state of a single zone with the index field indicating which zone is represented. The count field contains the count of the total number of zones available on the device.
 	/// </summary>
 	public class StateDeviceChainResponse : LifxResponse {
-		internal StateDeviceChainResponse(FrameHeader header, MessageType type, uint source) : base(
-			header,
-			type, source) {
+		internal StateDeviceChainResponse(LifxPacket newPacket) : base(newPacket) {
 			Tiles = new List<Tile>();
 			TotalCount = 16;
 			StartIndex = 0;
@@ -360,8 +350,7 @@ namespace LifxEmulator {
 	}
 	
 	public class StatePowerResponse : LifxResponse {
-		internal StatePowerResponse(FrameHeader header, MessageType type,  uint source) : base(header,
-			type, source) {
+		internal StatePowerResponse(LifxPacket packet) : base(packet) {
 			Level = 65535;
 			var args = new List<object> {Level};
 			Payload = new Payload(args.ToArray());
@@ -375,8 +364,7 @@ namespace LifxEmulator {
 	}
 	
 	public class StateLocationResponse : LifxResponse {
-		internal StateLocationResponse(FrameHeader header, MessageType type, uint source) : base(header,
-			type, source) {
+		internal StateLocationResponse(LifxPacket newPacket) : base(newPacket) {
 			var rand = new Random();
 			var location = new byte[16];
 			rand.NextBytes(location);
@@ -397,8 +385,7 @@ namespace LifxEmulator {
 	/// Device group.
 	/// </summary>
 	public class StateGroupResponse : LifxResponse {
-		internal StateGroupResponse(FrameHeader header, MessageType type, uint source) : base(header,
-			type, source) {
+		internal StateGroupResponse(LifxPacket newPacket) : base(newPacket) {
 			var rand = new Random();
 			var location = new byte[16];
 			rand.NextBytes(location);
@@ -419,8 +406,8 @@ namespace LifxEmulator {
 	/// Get the list of colors currently being displayed by zones
 	/// </summary>
 	public class StateExtendedColorZonesResponse : LifxResponse {
-		internal StateExtendedColorZonesResponse(FrameHeader header, MessageType type, uint source) :
-			base(header, type, source) {
+		internal StateExtendedColorZonesResponse(LifxPacket newPacket) :
+			base(newPacket) {
 			Colors = new List<LifxColor>();
 			Count = 8;
 			Index = 0;
@@ -453,8 +440,7 @@ namespace LifxEmulator {
 	/// Sent by a device to provide the current light state
 	/// </summary>
 	public class LightStateResponse : LifxResponse {
-		internal LightStateResponse(FrameHeader header, MessageType type, uint source) : base(header,
-			type, source) {
+		internal LightStateResponse(LifxPacket newPacket) : base(newPacket) {
 
 			var args = new List<object> {
 				new LifxColor(255, 0, 0),
@@ -501,8 +487,8 @@ namespace LifxEmulator {
 	/// Response to GetVersion message.	Provides the hardware version of the device.
 	/// </summary>
 	public class StateVersionResponse : LifxResponse {
-		internal StateVersionResponse(FrameHeader header, MessageType type, uint source, int deviceVersion) : base(
-			header, type, source) {
+		internal StateVersionResponse(LifxPacket newPacket, int deviceVersion) : base(
+			newPacket) {
 			Product = 32;
 
 			switch (deviceVersion) {
@@ -551,8 +537,8 @@ namespace LifxEmulator {
 	/// Response to GetHostFirmware message. Provides host firmware information.
 	/// </summary>
 	public class StateHostFirmwareResponse : LifxResponse {
-		internal StateHostFirmwareResponse(FrameHeader header, MessageType type, uint source, int deviceVersion) : base(
-			header, type, source) {
+		internal StateHostFirmwareResponse(LifxPacket newPacket, int deviceVersion) : base(
+			newPacket) {
 			Build = DateTime.Now;
 			ulong reserved = 0;
 			ulong version = 1532997580;
@@ -577,8 +563,8 @@ namespace LifxEmulator {
 	/// Response to GetVersion message.	Provides the hardware version of the device.
 	/// </summary>
 	public class StateRelayPowerResponse : LifxResponse {
-		internal StateRelayPowerResponse(FrameHeader header, MessageType type, uint source) : base(
-			header, type, source) {
+		internal StateRelayPowerResponse(LifxPacket newPacket) : base(
+			newPacket) {
 			RelayIndex = 0;
 			Level = 65536;
 			Payload = new Payload(new object[]{RelayIndex, Level});

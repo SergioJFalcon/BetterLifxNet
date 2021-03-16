@@ -59,13 +59,13 @@ namespace LifxNetPlus {
 		private void HandleIncomingMessages(byte[] data, IPEndPoint endpoint) {
 			var remote = endpoint;
 			var msg = ParseMessage(data);
-			switch (msg.Type) {
+			switch (msg.Packet.Type) {
 				case MessageType.DeviceStateService:
-					ProcessDeviceDiscoveryMessage(remote.Address, msg);
+					ProcessDeviceDiscoveryMessage(remote.Address, (StateServiceResponse) msg);
 					break;
 				default:
-					if (_taskCompletions.ContainsKey(msg.Source)) {
-						var tcs = _taskCompletions[msg.Source];
+					if (_taskCompletions.ContainsKey(msg.Packet.Source)) {
+						var tcs = _taskCompletions[msg.Packet.Source];
 						tcs(msg);
 					}
 
@@ -84,51 +84,51 @@ namespace LifxNetPlus {
 			_isRunning = false;
 			_socket.Dispose();
 		}
-
-		private Task<T> BroadcastMessageAsync<T>(Device device, FrameHeader header, MessageType type,
-			params object[] args)
-			where T : LifxResponse {
-			var hostname = "255.255.255.255";
-			if (device != null) {
-				hostname = device.HostName;
-				if (type != MessageType.DeviceGetService) {
-					header.TargetMacAddress = device.MacAddress;
-				}
-			}
-			Debug.WriteLine("Broadcasting " + type + " to " + hostname);
-			var payload = new Payload(args);
-			return BroadcastPayloadAsync<T>(hostname, header, type, payload);
+		
+		private Task<T> BroadcastMessageAsync<T>(LifxPacket packet) where T : LifxResponse {
+			
+			
+			Debug.WriteLine("Broadcasting discovery packet.");
+			return BroadcastPayloadAsync<T>("255.255.255.255", packet);
 		}
 
-		private async Task<T> BroadcastPayloadAsync<T>(string host, FrameHeader header, MessageType type,
-			Payload payload)
+		private Task<T> BroadcastMessageAsync<T>(Device device, LifxPacket packet) where T : LifxResponse {
+			
+			var hostname = "255.255.255.255";
+			
+			if (device != null) {
+				hostname = device.HostName;
+				if (packet.Type != MessageType.DeviceGetService) {
+					packet.Target = device.MacAddress;
+				}
+			}
+		
+			Debug.WriteLine("Broadcasting " + packet.Type + " to " + hostname);
+			return BroadcastPayloadAsync<T>(hostname, packet);
+		}
+		
+		private async Task<T> BroadcastPayloadAsync<T>(string host, LifxPacket packet)
 			where T : LifxResponse {
 			if (_socket == null)
 				throw new InvalidOperationException("No valid socket");
-			MemoryStream ms = new MemoryStream();
-			WritePacketToStream(ms, header, (ushort) type, payload);
-			var data = ms.ToArray();
+			var data = packet.Encode();
 			Debug.WriteLine(
 				string.Join(",", (from a in data select a.ToString("X2")).ToArray()));
 
 
 			TaskCompletionSource<T>? tcs = null;
-			if ( //header.AcknowledgeRequired && 
-				header.Identifier > 0 &&
-				typeof(T) != typeof(UnknownResponse)) {
+			if (packet.Identifier > 0 &&
+			    typeof(T) != typeof(UnknownResponse)) {
 				tcs = new TaskCompletionSource<T>();
 				Action<LifxResponse> action = (r) => {
 					if (r.GetType() == typeof(T))
 						tcs.TrySetResult((T) r);
 				};
-				_taskCompletions[header.Identifier] = action;
+				_taskCompletions[packet.Identifier] = action;
 			}
 
-			using (MemoryStream stream = new MemoryStream()) {
-				WritePacketToStream(stream, header, (UInt16) type, payload);
-				var msg = stream.ToArray();
-				await _socket.SendAsync(msg, msg.Length, host, Port);
-			}
+			var msg = packet.Encode();
+			await _socket.SendAsync(msg, msg.Length, host, Port);
 
 			//{
 			//	await WritePacketToStreamAsync(stream, header, (UInt16)type, payload).ConfigureAwait(false);
@@ -142,109 +142,21 @@ namespace LifxNetPlus {
 				try {
 					result = await tcs.Task.ConfigureAwait(false);
 				} finally {
-					_taskCompletions.Remove(header.Identifier);
+					_taskCompletions.Remove(packet.Identifier);
 				}
 			}
 
 			return result;
 		}
-
+		
+	
 		private static LifxResponse ParseMessage(byte[] packet) {
 			var fh = new LifxPacket(packet);
-			Debug.WriteLine("Schmancy packet: " + JsonConvert.SerializeObject(fh));
-			Debug.WriteLine("As string: " + fh);
-			using MemoryStream ms = new MemoryStream(packet);
-			var header = new FrameHeader();
-			BinaryReader br = new BinaryReader(ms);
-			//frame
-			var size = br.ReadUInt16();
-			if (packet.Length != size || size < 36)
-				throw new Exception("Invalid packet");
-			br.ReadUInt16(); //origin:2, reserved:1, addressable:1, protocol:12
-			var source = br.ReadUInt32();
-			//frame address
-			byte[] target = br.ReadBytes(8);
-			header.TargetMacAddress = target;
-			ms.Seek(6, SeekOrigin.Current); //skip reserved
-			br.ReadByte(); //reserved:6, ack_required:1, res_required:1, 
-			header.Sequence = br.ReadByte();
-			//protocol header
-			var nanoseconds = br.ReadUInt64();
-			header.AtTime = Utilities.Epoch.AddMilliseconds(nanoseconds * 0.000001);
-			var type = (MessageType) br.ReadUInt16();
-			ms.Seek(2, SeekOrigin.Current); //skip reserved
-			return LifxResponse.Create(header, type, source,
-				new Payload(size > 36 ? br.ReadBytes(size - 36) : new byte[] { }));
+			Debug.WriteLine("Incoming message: " + JsonConvert.SerializeObject(fh));
+			return LifxResponse.Create(fh);
 		}
 
-		private static void WritePacketToStream(Stream outStream, FrameHeader header, ushort type, Payload payload) {
-			using var dw = new BinaryWriter(outStream);
-
-			#region Frame
-
-			//size uint16
-			dw.Write((ushort) (payload.Length + 36)); //size
-			
-			if (type == 2) {
-				dw.Write((ushort)0x3400);
-			} else {
-				dw.Write((ushort)0x1400);
-			}
-			
-			dw.Write(header.Identifier); //source identifier - unique value set by the client, used by responses. If 0, responses are broadcast instead	
-			
-			#endregion Frame
-
-			#region Frame address
-
-			//The target device address is 8 bytes long, when using the 6 byte MAC address then left - 
-			//justify the value and zero-fill the last two bytes. A target device address of all zeroes effectively addresses all devices on the local network
-			dw.Write(header.TargetMacAddress); // target mac address - 0 means all devices
-			dw.Write(new byte[] {0, 0, 0, 0, 0, 0}); //reserved 1
-
-			//The client can use acknowledgements to determine that the LIFX device has received a message. 
-			//However, when using acknowledgements to ensure reliability in an over-burdened lossy network ... 
-			//causing additional network packets may make the problem worse. 
-			//Client that don't need to track the updated state of a LIFX device can choose not to request a 
-			//response, which will reduce the network burden and may provide some performance advantage. In
-			//some cases, a device may choose to send a state update response independent of whether res_required is set.
-			if (header.AcknowledgeRequired && header.ResponseRequired)
-				dw.Write((byte) 0x03);
-			else if (header.AcknowledgeRequired)
-				dw.Write((byte) 0x02);
-			else if (header.ResponseRequired)
-				dw.Write((byte) 0x01);
-			else
-				dw.Write((byte) 0x00);
-			//The sequence number allows the client to provide a unique value, which will be included by the LIFX 
-			//device in any message that is sent in response to a message sent by the client. This allows the client
-			//to distinguish between different messages sent with the same source identifier in the Frame. See
-			//ack_required and res_required fields in the Frame Address.
-			dw.Write(header.Sequence);
-
-			#endregion Frame address
-
-			#region Protocol Header
-
-			//The at_time value should be zero for Set and Get messages sent by a client.
-			//For State messages sent by a device, the at_time will either be the device
-			//current time when the message was received or zero. StateColor is an example
-			//of a message that will return a non-zero at_time value
-			if (header.AtTime > DateTime.MinValue) {
-				var time = header.AtTime.ToUniversalTime();
-				dw.Write((ulong) (time - new DateTime(1970, 01, 01)).TotalMilliseconds * 10); //timestamp
-			} else {
-				dw.Write((ulong) 0);
-			}
-
-			#endregion Protocol Header
-
-			dw.Write(type); //packet _type
-			dw.Write((ushort) 0); //reserved
-			dw.Write(payload.ToArray());
-			dw.Flush();
-		}
-
+		
 		private static byte[] GetMacAddress()
 		{
 			var mac = new byte[] {0, 0, 0, 0, 0, 0, 0, 0};
@@ -278,8 +190,8 @@ namespace LifxNetPlus {
 		public FrameHeader() {
 		}
 
-		public FrameHeader(uint id, bool acknowledgeRequired = false) {
-			Identifier = id;
+		public FrameHeader(bool acknowledgeRequired = false) {
+			Identifier = MessageId.GetNextIdentifier();
 			AcknowledgeRequired = acknowledgeRequired;
 		}
 

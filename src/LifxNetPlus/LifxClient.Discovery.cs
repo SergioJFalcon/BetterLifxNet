@@ -8,8 +8,7 @@ using System.Threading.Tasks;
 
 namespace LifxNetPlus {
 	public partial class LifxClient {
-		private static uint _identifier = 1;
-		private static readonly object IdentifierLock = new object();
+		
 		private uint _discoverSourceId;
 		private CancellationTokenSource? _discoverCancellationSource;
 		private readonly Dictionary<string, Device> _discoveredBulbs = new Dictionary<string, Device>();
@@ -17,13 +16,7 @@ namespace LifxNetPlus {
 		private readonly int[] _tileIds = {55};
 		private readonly int[] _switchIds = {70};
 
-		private static uint GetNextIdentifier() {
-			lock (IdentifierLock) {
-				_identifier++;
-			}
-
-			return _identifier;
-		}
+		
 
 		/// <summary>
 		/// Event fired when a LIFX bulb is discovered on the network
@@ -54,11 +47,11 @@ namespace LifxNetPlus {
 			public Device Device { get; }
 		}
 
-		private void ProcessDeviceDiscoveryMessage(IPAddress remoteAddress, LifxResponse msg) {
-			Debug.WriteLine("Processing device discovery message...");
-			string id = msg.Header.TargetMacAddressName; //remoteAddress.ToString()
-			if (_discoveredBulbs.ContainsKey(id)) //already discovered
-			{
+		private void ProcessDeviceDiscoveryMessage(IPAddress remoteAddress, StateServiceResponse msg) {
+			string id = msg.TargetMacAddressName;
+			Debug.WriteLine($"Processing device discovery message for {remoteAddress}: {id}");
+
+			if (_discoveredBulbs.ContainsKey(id)) {
 				_discoveredBulbs[id].LastSeen = DateTime.UtcNow; //Update datestamp
 				_discoveredBulbs[id].HostName = remoteAddress.ToString(); //Update hostname in case IP changed
 				Debug.WriteLine("Device already discovered, skipping.");
@@ -67,14 +60,16 @@ namespace LifxNetPlus {
 
 			if (msg.Source != _discoverSourceId || //did we request the discovery?
 			    _discoverCancellationSource == null ||
-			    _discoverCancellationSource.IsCancellationRequested) //did we cancel discovery?
-				return;
+			    _discoverCancellationSource.IsCancellationRequested) {
+				Debug.WriteLine("Source mismatch or cancellation...");
+				return;	
+			}
 
 			var address = remoteAddress.ToString();
-			var mac = msg.Header.TargetMacAddress;
+			var mac = msg.Target;
 			msg.Payload.Reset();
-			var svc = msg.Payload.GetUint8();
-			var port = msg.Payload.GetUInt32();
+			var svc = msg.Service;
+			var port = msg.Port;
 			var lastSeen = DateTime.UtcNow;
 			Debug.WriteLine("Creating generic device: " + address + " and " + port);
 			var device = new LightBulb(address, mac, svc, port) {
@@ -99,20 +94,22 @@ namespace LifxNetPlus {
 				return;
 			_discoverCancellationSource = new CancellationTokenSource();
 			var token = _discoverCancellationSource.Token;
-			_discoverSourceId = GetNextIdentifier();
+			_discoverSourceId = MessageId.GetNextIdentifier();
+			var discoPacket = new LifxPacket(_discoverSourceId, MessageType.DeviceGetService);
 			//Start discovery thread
 			Task.Run(async () => {
 				Debug.WriteLine("Sending GetServices...");
-				FrameHeader header = new FrameHeader(_discoverSourceId);
+				await BroadcastMessageAsync<UnknownResponse>(discoPacket);
 				while (!token.IsCancellationRequested) {
 					try {
-						await BroadcastMessageAsync<UnknownResponse>(null, header,
-							MessageType.DeviceGetService);
+						  //await BroadcastMessageAsync<UnknownResponse>(null, header,
+						  //MessageType.DeviceGetService);
+						
 					} catch (Exception e) {
-						Debug.WriteLine("Broadcast exception: " + e.Message);
+						Debug.WriteLine("Broadcast exception: " + e.Message + e.StackTrace);
 					}
 
-					await Task.Delay(10000, token);
+					await Task.Delay(1, token);
 					var lostDevices = devices.Where(d => (DateTime.UtcNow - d.LastSeen).TotalMinutes > 5).ToArray();
 					if (!lostDevices.Any()) {
 						continue;
