@@ -16,13 +16,9 @@ using Console = Colorful.Console;
 namespace LifxEmulator {
 	internal static class Program {
 		private static int _deviceVersion;
-		private static uint _identifier = 1;
 		private static bool _quitFlag;
-		private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-		private static readonly object IdentifierLock = new object();
-
-
-		public static void Main(string[] args) {
+		
+		public static void Main() {
 			var tr1 = new TextWriterTraceListener(Console.Out);
 			Trace.Listeners.Add(tr1);
 			Console.CancelKeyPress += HandleClose;
@@ -38,15 +34,6 @@ namespace LifxEmulator {
 			Console.WriteLine("Emulation mode: " + _deviceVersion);
 			StartListener().Wait();
 		}
-
-		private static uint GetNextIdentifier() {
-			lock (IdentifierLock) {
-				_identifier++;
-			}
-
-			return _identifier;
-		}
-
 
 		private static void HandleClose(object sender, ConsoleCancelEventArgs args) {
 			_quitFlag = true;
@@ -79,10 +66,10 @@ namespace LifxEmulator {
 
 		private static async Task HandleIncomingMessages(byte[] data, IPEndPoint endpoint, UdpClient client) {
 			var remote = endpoint;
-			var msg = await ParseMessage(data);
+			var msg = await ParseMessage(data, remote);
 
 			if (msg.GetType() != typeof(AcknowledgementResponse) || msg.AcknowledgeRequired) {
-				Debug.WriteLine($"Sending {msg.Type} to " + remote.Address + ": " + JsonConvert.SerializeObject(msg));
+				Debug.WriteLine( $"LOCAL=>{remote.Address}::{msg.Type}: " + JsonConvert.SerializeObject(msg));
 				await BroadcastMessageAsync(remote, msg, client);
 			}
 		}
@@ -90,15 +77,13 @@ namespace LifxEmulator {
 
 		private static async Task BroadcastMessageAsync(IPEndPoint target, LifxPacket packet, UdpClient client) {
 			var msg = packet.Encode();
-			var text = string.Join(",", (from a in msg select a.ToString("X2")).ToArray());
-			Debug.WriteLine($"Sending message to {target.Address}: " + text);
-
 			await client.SendAsync(msg, msg.Length, target);
 		}
 
 
-		private static async Task<LifxResponse> ParseMessage(byte[] packet) {
+		private static async Task<LifxResponse> ParseMessage(byte[] packet, IPEndPoint incoming) {
 			var msg = new LifxPacket(packet);
+			Debug.WriteLine( $"{incoming.Address}=>LOCAL::{msg.Type}: " + JsonConvert.SerializeObject(msg));
 			if (msg.Type == MessageType.SetColorZones) {
 				var start = msg.Payload.GetUint8();
 				var end = msg.Payload.GetUint8();
@@ -117,9 +102,13 @@ namespace LifxEmulator {
 				Console.WriteLine("");
 			}
 
+			if (msg.Type == MessageType.LightSetColor) {
+				
+			}
+
 			var res = LifxResponse.Create(msg, _deviceVersion);
 			await Task.FromResult(true);
-			if (msg.Type == MessageType.DeviceStateService) {
+			if (res.Type == MessageType.DeviceStateService) {
 				res.Target = GetMacAddress();
 			} else {
 				res.Target = msg.Target;
@@ -130,10 +119,10 @@ namespace LifxEmulator {
 
 		private static byte[] GetMacAddress() {
 			var mac = new byte[] {0, 0, 0, 0, 0, 0, 0, 0};
-			NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();
+			var interfaces = NetworkInterface.GetAllNetworkInterfaces();
 			if (interfaces.Length < 1) return mac;
 
-			foreach (NetworkInterface adapter in interfaces) {
+			foreach (var adapter in interfaces) {
 				if (adapter.NetworkInterfaceType != NetworkInterfaceType.Ethernet) {
 					continue;
 				}

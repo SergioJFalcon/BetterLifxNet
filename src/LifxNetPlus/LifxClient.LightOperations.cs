@@ -85,44 +85,48 @@ namespace LifxNetPlus {
 		/// <param name="color">The LifxColor to set the bulb to</param>
 		/// <param name="duration">An optional transition duration, in milliseconds.</param>
 		/// <returns></returns>
-		public Task SetColorAsync(LightBulb bulb, LifxColor color, int duration = 0) {
-			return SetColorAsync(bulb, (ushort) color.LifxHue, (ushort) color.LifxSaturation,
-				(ushort) color.LifxBrightness, (ushort) color.K, duration);
+		public async Task<LightStateResponse> SetColorAsync(LightBulb bulb, LifxColor color, int duration = 0) {
+			if (bulb == null) throw new ArgumentNullException(nameof(bulb));
+			if (duration > uint.MaxValue || duration < 0) throw new ArgumentOutOfRangeException(nameof(duration));
+			Debug.WriteLine("Setting color to {0}", bulb);
+			var dur = (uint) duration;
+			var packet = new LifxPacket(MessageType.LightSetColor);
+			packet.ResponseRequired = true;
+			packet.Payload = new Payload(new object[] {(byte) 0, color.ToBytes(), dur});
+			return await BroadcastMessageAsync<LightStateResponse>(bulb, packet);
 		}
-
 
 		/// <summary>
-		/// Sets color and temperature for a bulb and uses a transition time to the provided state
+		/// Sets color and temperature of bulb
 		/// </summary>
-		/// <param name="bulb">Light bulb</param>
-		/// <param name="hue">0..65535</param>
-		/// <param name="saturation">0..65535</param>
-		/// <param name="brightness">0..65535</param>
-		/// <param name="kelvin">2700..9000</param>
-		/// <param name="duration">Transition duration, in ms.</param>
-		/// <returns></returns>
-		public async Task SetColorAsync(LightBulb bulb,
-			ushort hue,
-			ushort saturation,
-			ushort brightness,
-			ushort kelvin,
-			int duration = 0) {
-			if (bulb == null)
-				throw new ArgumentNullException(nameof(bulb));
-			if (duration > uint.MaxValue ||
-			    duration < 0)
-				throw new ArgumentOutOfRangeException("transitionDuration");
-			if (kelvin < 2500 || kelvin > 9000) {
-				throw new ArgumentOutOfRangeException("kelvin", "Kelvin must be between 2500 and 9000");
-			}
-
+		/// <param name="bulb">The bulb to set</param>
+		/// <param name="r"></param>
+		/// <param name="g"></param>
+		/// <param name="b"></param>
+		/// /// <param name="w"></param>
+		/// <param name="duration">An optional transition duration, in milliseconds.</param>
+		/// <returns>LightStateResponse</returns>
+		public async Task<LightStateResponse> SetRgbwAsync(LightBulb bulb, int r, int g, int b, int w = 0, int duration = 0) {
+			if (bulb == null) throw new ArgumentNullException(nameof(bulb));
+			if (duration > uint.MaxValue || duration < 0) throw new ArgumentOutOfRangeException(nameof(duration));
 			Debug.WriteLine("Setting color to {0}", bulb);
-			var packet = new LifxPacket(MessageType.LightSetColor);
-			packet.Payload = new Payload(new object[] {0x00, hue, saturation, brightness, kelvin, duration});
-			await BroadcastMessageAsync<AcknowledgementResponse>(bulb, packet);
+			var dur = (uint) duration;
+			var packet = new LifxPacket(MessageType.LightSetRgbw);
+			packet.ResponseRequired = true;
+			packet.Payload = new Payload(new object[] {(short) r,(short) g,(short) b,(short) w, dur});
+			return await BroadcastMessageAsync<LightStateResponse>(bulb, packet);
 		}
 
 
+		
+		/// <summary>
+		/// Set Light Brightness
+		/// </summary>
+		/// <param name="bulb"></param>
+		/// <param name="brightness">0 - 255</param>
+		/// <param name="duration"></param>
+		/// <returns></returns>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public async Task SetBrightnessAsync(LightBulb bulb,
 			ushort brightness,
 			int duration = 0) {

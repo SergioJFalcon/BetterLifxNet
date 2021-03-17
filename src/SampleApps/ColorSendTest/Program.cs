@@ -16,8 +16,10 @@ namespace ColorSendTest {
 		private static List<Device> _devicesSwitch;
 		private static List<Device> _devicesTile;
 
-		static async Task Main(string[] args) {
+		static async Task Main() {
 			var tr1 = new TextWriterTraceListener(Console.Out);
+			Trace.Listeners.Add(tr1);
+
 			_devicesBulb = new List<Device>();
 			_devicesMulti = new List<Device>();
 			_devicesMultiV2 = new List<Device>();
@@ -30,7 +32,6 @@ namespace ColorSendTest {
 			_client.StartDeviceDiscovery();
 			await Task.Delay(5000);
 			_client.StopDeviceDiscovery();
-			Trace.Listeners.Add(tr1);
 			Console.WriteLine("Please select a device type to test (Enter a number):");
 			if (_devicesBulb.Count > 0) {
 				Console.WriteLine("1: Bulbs");
@@ -52,7 +53,8 @@ namespace ColorSendTest {
 				Console.WriteLine("5: Switch");
 			}
 
-			var selection = int.Parse(Console.ReadLine() ?? "0");
+			var selection = int.Parse(Console.ReadLine() ?? "1");
+			
 			switch (selection) {
 				case 1:
 					Console.WriteLine("Flashing bulbs on and off.");
@@ -83,48 +85,42 @@ namespace ColorSendTest {
 		private static async Task FlashBulbs() {
 			// Save our existing states
 			var stateList = new List<LightStateResponse>();
-			var red = new LifxColor(255, 0, 0);
-			var black = new LifxColor(0, 0, 0);
 			foreach (var b in _devicesBulb) {
 				var bulb = (LightBulb) b;
 				var state = await _client.GetLightStateAsync(bulb);
 				stateList.Add(state);
-				await _client.SetPowerAsync(b, 1);
-				await _client.SetBrightnessAsync(bulb, 255);
+				_client.SetPowerAsync(b, 1).ConfigureAwait(false);
+				_client.SetBrightnessAsync(bulb, 255).ConfigureAwait(false);
 			}
 
-			Console.WriteLine($"Flashing {_devicesBulb.Count} bulbs.");
-			foreach (var bulb in _devicesBulb.Cast<LightBulb>()) {
-				_client.SetColorAsync(bulb, red, 2700).ConfigureAwait(false);
-			}
-
+			
 			await Task.Delay(1000);
-			foreach (var bulb in _devicesBulb.Cast<LightBulb>()) {
-				_client.SetColorAsync(bulb, black, 2700).ConfigureAwait(false);
+			for (var i = 0; i < 100; i++) {
+				var progress = i / 100f;
+				var color = Rainbow(progress);
+				foreach (var bulb in _devicesBulb.Cast<LightBulb>()) {
+					Console.WriteLine("Setting: " + color.ToHsbkString());
+					//var res = await _client.SetColorAsync(bulb, color);
+					_client.SetBrightnessAsync(bulb, 255);
+					var r = (color.R / 255) * 65535;
+					var g = (color.G / 255) * 65535;
+					var b = (color.B / 255) * 65535;
+					_client.SetRgbwAsync(bulb, r, g, b, 0).ConfigureAwait(false);
+					//Console.WriteLine("Color res: " + JsonConvert.SerializeObject(res));
+					await Task.Delay(1);
+				}
 			}
 
 			await Task.Delay(500);
-
-			foreach (var bulb in _devicesBulb.Cast<LightBulb>()) {
-				_client.SetColorAsync(bulb, red, 2700).ConfigureAwait(false);
-			}
-
-			await Task.Delay(1000);
-			foreach (var bulb in _devicesBulb.Cast<LightBulb>()) {
-				_client.SetColorAsync(bulb, black, 2700).ConfigureAwait(false);
-			}
-
-			await Task.Delay(500);
-			// Set them to red
 			var idx = 0;
 			Console.WriteLine("Restoring bulb states.");
-			foreach (var b in _devicesBulb) {
-				var bulb = (LightBulb) b;
-				var state = stateList[idx];
-				await _client.SetBrightnessAsync(bulb, state.Brightness);
-				await _client.SetPowerAsync(bulb, state.IsOn ? 1 : 0);
-				idx++;
-			}
+			// foreach (var b in _devicesBulb) {
+			// 	var bulb = (LightBulb) b;
+			// 	var state = stateList[idx];
+			// 	await _client.SetBrightnessAsync(bulb, state.Brightness);
+			// 	await _client.SetPowerAsync(bulb, state.IsOn ? 1 : 0);
+			// 	idx++;
+			// }
 		}
 
 		private static async Task FlashMultizone() {

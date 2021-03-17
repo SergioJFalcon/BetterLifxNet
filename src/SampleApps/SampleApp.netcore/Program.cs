@@ -8,7 +8,7 @@ namespace SampleApp.netcore {
 	class Program {
 		static LifxClient _client;
 
-		static void Main(string[] args) {
+		static void Main() {
 			var tr1 = new TextWriterTraceListener(Console.Out);
 			Trace.Listeners.Add(tr1);
 			_client = LifxClient.CreateAsync().Result;

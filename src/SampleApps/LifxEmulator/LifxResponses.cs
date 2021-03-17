@@ -19,7 +19,6 @@ namespace LifxEmulator {
 			switch (packet.Type) {
 				case MessageType.DeviceGetService:
 					newPacket.Type = MessageType.DeviceStateService;
-					newPacket.Addressable = true;
 					return new StateServiceResponse(newPacket);
 				case MessageType.DeviceEchoRequest:
 					newPacket.Type = MessageType.DeviceEchoResponse;

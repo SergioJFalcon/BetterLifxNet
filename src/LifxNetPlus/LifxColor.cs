@@ -59,7 +59,7 @@ namespace LifxNetPlus {
 		/// <summary>
 		/// The temperature of this Color. The temperature ranges from 2700-9000
 		/// </summary>
-		public float K { get; set; }
+		public ushort K { get; set; }
 
 		/// <summary>
 		/// The saturation of this Color. The saturation ranges from 0.0 through 1.0, where 0.0 is grayscale and 1.0 is the most saturated.
@@ -72,17 +72,17 @@ namespace LifxNetPlus {
 		/// <summary>
 		/// The brightness of this color. The brightness range is 0 - 65535
 		/// </summary>
-		public int LifxBrightness => (int) _color.GetBrightness() * 65535;
+		public ushort LifxBrightness => (ushort) (_color.GetBrightness() * 65535);
 
 		/// <summary>
 		/// The hue, in the standard Lifx format, of this Color. The lifx hue is measured from 0 - 65565. 
 		/// </summary>
-		public int LifxHue => (int) _color.GetHue() / 360 * 65536;
+		public ushort LifxHue => (ushort) ((_color.GetHue() / 360) * 65536);
 
 		/// <summary>
 		/// The saturation of this color in Lifx format. Range is 0 - 65535;
 		/// </summary>
-		public int LifxSaturation => (int) _color.GetSaturation() * 65535;
+		public ushort LifxSaturation => (ushort) (_color.GetSaturation() * 65535);
 
 		private Color _color;
 
@@ -138,7 +138,7 @@ namespace LifxNetPlus {
 			var hue = Hue / 360 * 65535;
 			var sat = Saturation * 65535;
 			var bri = Brightness * 65535;
-			foreach (var u in new[] {(ushort) hue, (ushort) sat, (ushort) bri, (ushort) K}) {
+			foreach (var u in new[] {(ushort) hue, (ushort) sat, (ushort) bri, K}) {
 				output.AddRange(BitConverter.GetBytes(u));
 			}
 

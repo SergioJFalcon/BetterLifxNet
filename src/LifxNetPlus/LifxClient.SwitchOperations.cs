@@ -13,10 +13,9 @@ namespace LifxNetPlus {
 		public async Task<StateRelayPowerResponse> GetRelayPowerAsync(Device device, int relayIndex = 0) {
 			if (device == null) throw new ArgumentNullException(nameof(device));
 
-			FrameHeader header = new FrameHeader();
 			var packet = new LifxPacket(MessageType.GetRelayPower, (byte) relayIndex);
 			return await BroadcastMessageAsync<StateRelayPowerResponse>(
-				device, new LifxPacket(MessageType.GetRelayPower));
+				device, packet);
 		}
 
 		/// <summary>

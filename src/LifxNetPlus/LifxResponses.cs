@@ -19,6 +19,7 @@ namespace LifxNetPlus {
 				MessageType.DeviceAcknowledgement => new AcknowledgementResponse(packet),
 				MessageType.DeviceStateLabel => new StateLabelResponse(packet),
 				MessageType.LightState => new LightStateResponse(packet),
+				MessageType.LightSetColor => new LightStateResponse(packet),
 				MessageType.LightStatePower => new LightPowerResponse(packet),
 				MessageType.LightStateInfrared => new InfraredStateResponse(packet),
 				MessageType.DeviceStateVersion => new StateVersionResponse(packet),
@@ -28,6 +29,7 @@ namespace LifxNetPlus {
 				MessageType.StateZone => new StateZoneResponse(packet),
 				MessageType.StateMultiZone => new StateMultiZoneResponse(packet),
 				MessageType.StateDeviceChain => new StateDeviceChainResponse(packet),
+				MessageType.StateTileState16 => new StateTileState16Response(packet),
 				MessageType.StateTileState64 => new StateTileState64Response(packet),
 				MessageType.StateRelayPower => new StateRelayPowerResponse(packet),
 				MessageType.DeviceStateHostInfo => new StateHostInfoResponse(packet),
@@ -68,7 +70,7 @@ namespace LifxNetPlus {
 	/// <summary>
 	/// Response to a state tile get request 
 	/// </summary>
-	internal class StateTileEffectResponse : LifxResponse {
+	public class StateTileEffectResponse : LifxResponse {
 		internal StateTileEffectResponse(LifxPacket packet) : base(
 			packet) {
 		}
@@ -391,6 +393,36 @@ namespace LifxNetPlus {
 		}
 	}
 
+	/// <summary>
+	/// Response to any message sent with ack_required set to 1. 
+	/// </summary>
+	public class StateTileState16Response : LifxResponse {
+		public LifxColor[] Colors { get; }
+
+		public uint TileIndex { get; }
+		public uint Width { get; }
+		public uint X { get; }
+		public uint Y { get; }
+
+		internal StateTileState16Response(LifxPacket packet) : base(
+			packet) {
+			TileIndex = packet.Payload.GetUint8();
+			// Skip one byte for reserved
+			packet.Payload.Advance();
+			X = packet.Payload.GetUint8();
+			Y = packet.Payload.GetUint8();
+			Width = packet.Payload.GetUint8();
+			Colors = new LifxColor[16];
+			for (var i = 0; i < Colors.Length; i++) {
+				if (packet.Payload.HasContent()) {
+					Colors[i] = packet.Payload.GetColor();
+				} else {
+					Debug.WriteLine($"Content size mismatch fetching colors: {i}/64: ");
+				}
+			}
+		}
+	}
+	
 	/// <summary>
 	/// Response to any message sent with ack_required set to 1. 
 	/// </summary>

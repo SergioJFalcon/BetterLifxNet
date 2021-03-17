@@ -7,6 +7,12 @@ using System.Linq;
 namespace LifxNetPlus {
 	[Serializable]
 	public class LifxPacket {
+		public MessageType Type { get; set; }
+		public string TargetMacAddressName {
+			get { return string.Join(":", Target.Take(6).Select(tb => tb.ToString("X2")).ToArray()); }
+		}
+		
+		public ushort Size { get; set; }
 		public bool AcknowledgeRequired { get; set; }
 		public bool Addressable { get; set; }
 		public bool ResponseRequired { get; set; }
@@ -15,16 +21,11 @@ namespace LifxNetPlus {
 		public byte Sequence { get; set; }
 		public byte[] Target { get; set; }
 		public DateTime AtTime { get; set; }
-		public MessageType Type { get; set; }
+		
 		public Payload Payload { get; set; }
-
-		public string TargetMacAddressName {
-			get { return string.Join(":", Target.Take(6).Select(tb => tb.ToString("X2")).ToArray()); }
-		}
-
+		
 		public uint Identifier { get; set; }
 		public uint Source { get; set; }
-		public ushort Size { get; set; }
 		public const ushort Protocol = 1024;
 
 		public LifxPacket(byte[] data) {
@@ -98,7 +99,6 @@ namespace LifxNetPlus {
 		/// <returns></returns>
 		public byte[] Encode() {
 			Size = (ushort) (Payload.Length + 36);
-			Tagged = Target[0] == 0;
 			Addressable = true;
 			var bytes = new List<byte>();
 			bytes.AddRange(BitConverter.GetBytes(Size));

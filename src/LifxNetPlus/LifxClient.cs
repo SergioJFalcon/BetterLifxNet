@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
@@ -17,13 +15,14 @@ namespace LifxNetPlus {
 		private const int Port = 56700;
 		private readonly UdpClient _socket;
 		private bool _isRunning;
-		private byte[] _macAddress;
 
 		private LifxClient() {
 			IPEndPoint end = new IPEndPoint(IPAddress.Any, Port);
-			_socket = new UdpClient(end) {Client = {Blocking = false}, DontFragment = true};
+			_socket = new UdpClient(end) {Client = {Blocking = false}};
+			if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) {
+				_socket.Client.DontFragment = true;
+			}
 			_socket.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-			_macAddress = GetMacAddress();
 		}
 
 		/// <summary>
@@ -66,7 +65,7 @@ namespace LifxNetPlus {
 
 		private void HandleIncomingMessages(byte[] data, IPEndPoint endpoint) {
 			var remote = endpoint;
-			var msg = ParseMessage(data);
+			var msg = ParseMessage(data, endpoint);
 			switch (msg.Packet.Type) {
 				case MessageType.DeviceStateService:
 					ProcessDeviceDiscoveryMessage(remote.Address, (StateServiceResponse) msg);
@@ -91,16 +90,9 @@ namespace LifxNetPlus {
 		}
 
 		private Task<T> BroadcastMessageAsync<T>(Device device, LifxPacket packet) where T : LifxResponse {
-			var hostname = "255.255.255.255";
-
-			if (device != null) {
-				hostname = device.HostName;
-				if (packet.Type != MessageType.DeviceGetService) {
-					packet.Target = device.MacAddress;
-				}
-			}
-
-			Debug.WriteLine("Broadcasting " + packet.Type + " to " + hostname);
+			var hostname = device.HostName;
+			packet.Target = device.MacAddress;
+			Debug.WriteLine($"LOCAL=>{hostname}::{packet.Type}: " + JsonConvert.SerializeObject(packet));
 			return BroadcastPayloadAsync<T>(hostname, packet);
 		}
 
@@ -147,52 +139,10 @@ namespace LifxNetPlus {
 		}
 
 
-		private static LifxResponse ParseMessage(byte[] packet) {
+		private static LifxResponse ParseMessage(byte[] packet, IPEndPoint ep) {
 			var fh = new LifxPacket(packet);
-			Debug.WriteLine("Incoming message: " + JsonConvert.SerializeObject(fh));
+			Debug.WriteLine($"{ep.Address}L=>LOCAL::{fh.Type}: " + JsonConvert.SerializeObject(packet));
 			return LifxResponse.Create(fh);
-		}
-
-
-		private static byte[] GetMacAddress() {
-			var mac = new byte[] {0, 0, 0, 0, 0, 0, 0, 0};
-			NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();
-			if (interfaces.Length < 1) return mac;
-
-			foreach (NetworkInterface adapter in interfaces) {
-				if (adapter.NetworkInterfaceType != NetworkInterfaceType.Ethernet) {
-					continue;
-				}
-
-				PhysicalAddress address = adapter.GetPhysicalAddress();
-				var bytes = address.GetAddressBytes().ToList();
-				bytes.Add(0);
-				bytes.Add(0); // Pad bytes
-				return bytes.ToArray();
-			}
-
-			return mac;
-		}
-	}
-
-	internal class FrameHeader {
-		public string TargetMacAddressName {
-			get { return string.Join(":", TargetMacAddress.Take(6).Select(tb => tb.ToString("X2")).ToArray()); }
-		}
-
-		public bool AcknowledgeRequired;
-		public DateTime AtTime = DateTime.MinValue;
-		public uint Identifier;
-		public bool ResponseRequired;
-		public byte Sequence;
-		public byte[] TargetMacAddress = {0, 0, 0, 0, 0, 0, 0, 0};
-
-		public FrameHeader() {
-		}
-
-		public FrameHeader(bool acknowledgeRequired = false) {
-			Identifier = MessageId.GetNextIdentifier();
-			AcknowledgeRequired = acknowledgeRequired;
 		}
 	}
 }
