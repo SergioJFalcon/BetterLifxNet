@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -28,6 +29,9 @@ namespace LifxNetPlus {
 		public uint Source { get; set; }
 		public const ushort Protocol = 1024;
 
+		public LifxPacket() {
+		}
+
 		public LifxPacket(byte[] data) {
 			MemoryStream ms = new MemoryStream(data);
 			var reader = new BinaryReader(ms);
@@ -46,10 +50,12 @@ namespace LifxNetPlus {
 			var nanoseconds = reader.ReadUInt64();
 			AtTime = Utilities.Epoch.AddMilliseconds(nanoseconds * 0.000001);
 			Type = (MessageType) reader.ReadUInt16();
+			reader.ReadUInt16(); // Reserved!
 			Identifier = Source;
 			Payload = new Payload();
-			if (Size > 36) {
-				Payload = new Payload(reader.ReadBytes(Size - 36));
+			var len = ms.Capacity - ms.Position;
+			if (len > 0) {
+				Payload = new Payload(reader.ReadBytes((int)len));
 			}
 		}
 

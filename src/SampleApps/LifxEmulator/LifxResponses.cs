@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
+using System.Linq;
 using LifxNetPlus;
+using Console = Colorful.Console;
 
 namespace LifxEmulator {
 	/// <summary>
@@ -8,82 +12,126 @@ namespace LifxEmulator {
 	/// </summary>
 	public abstract class LifxResponse : LifxPacket {
 		internal LifxPacket Packet { get; }
-
+		
 		internal LifxResponse(LifxPacket packet) : base(packet) {
 			Packet = packet;
 		}
 
-		internal static LifxResponse Create(LifxPacket packet, int deviceVersion) {
-			packet.Payload.Reset();
+		internal static LifxPacket Create(MessageType type, Product productInfo, DeviceData devData) {
 			var newPacket = new LifxPacket(MessageType.DeviceAcknowledgement);
-			switch (packet.Type) {
+			switch (type) {
 				case MessageType.DeviceGetService:
 					newPacket.Type = MessageType.DeviceStateService;
-					return new StateServiceResponse(newPacket);
+					devData.OutPacket = new StateServiceResponse(newPacket);
+					break;
 				case MessageType.DeviceEchoRequest:
 					newPacket.Type = MessageType.DeviceEchoResponse;
-					return new EchoResponse(newPacket);
+					devData.OutPacket = new EchoResponse(newPacket);
+					break;
 				case MessageType.DeviceGetInfo:
 					newPacket.Type = MessageType.DeviceStateInfo;
-					return new StateInfoResponse(newPacket);
+					devData.OutPacket = new StateInfoResponse(newPacket);
+					break;
+				case MessageType.LightGetLightRestore:
+					newPacket.Type = MessageType.LightStateLightRestore;
+					devData.OutPacket = new LightStateLightRestoreResponse(newPacket, devData);
+					break;
 				case MessageType.LightGet:
+				case MessageType.LightSetColor:
+				case MessageType.LightSetWaveform:
+				case MessageType.LightSetWaveformOptional:
 					newPacket.Type = MessageType.LightState;
-					return new LightStateResponse(newPacket);
+					devData.OutPacket = new LightStateResponse(newPacket, devData);
+					break;
+				case MessageType.LightSetPower:
+				case MessageType.LightGetPower:
+					newPacket.Type = MessageType.LightStatePower;
+					devData.OutPacket = new StateLightPowerResponse(newPacket, devData);
+					break;
 				case MessageType.DeviceGetVersion:
 					newPacket.Type = MessageType.DeviceStateVersion;
-					return new StateVersionResponse(newPacket, deviceVersion);
+					devData.OutPacket = new StateVersionResponse(newPacket, productInfo);
+					break;
 				case MessageType.DeviceGetHostFirmware:
 					newPacket.Type = MessageType.DeviceStateHostFirmware;
-					return new StateHostFirmwareResponse(newPacket, deviceVersion);
+					devData.OutPacket = new StateHostFirmwareResponse(newPacket);
+					break;
 				case MessageType.DeviceGetWifiFirmware:
 					newPacket.Type = MessageType.DeviceStateWifiFirmware;
-					return new StateWifiFirmwareResponse(newPacket);
+					devData.OutPacket = new StateWifiFirmwareResponse(newPacket);
+					break;
 				case MessageType.GetExtendedColorZones:
 					newPacket.Type = MessageType.StateExtendedColorZones;
-					return new StateExtendedColorZonesResponse(newPacket);
+					devData.OutPacket = new StateExtendedColorZonesResponse(newPacket, devData);
+					break;
+				case MessageType.SetColorZones:
 				case MessageType.GetColorZones:
 					newPacket.Type = MessageType.StateMultiZone;
-					return new StateMultiZoneResponse(newPacket);
+					devData.OutPacket = new StateMultiZoneResponse(newPacket, devData);
+					break;
 				case MessageType.GetDeviceChain:
 					newPacket.Type = MessageType.StateDeviceChain;
-					return new StateDeviceChainResponse(newPacket);
+					devData.OutPacket = new StateDeviceChainResponse(newPacket);
+					break;
+				case MessageType.SetRelayPower:
 				case MessageType.GetRelayPower:
 					newPacket.Type = MessageType.StateRelayPower;
-					return new StateRelayPowerResponse(newPacket);
+					devData.OutPacket = new StateRelayPowerResponse(newPacket);
+					break;
 				case MessageType.DeviceGetPower:
-					newPacket.Type = MessageType.DeviceStatePower;
-					return new StatePowerResponse(newPacket);
 				case MessageType.DeviceSetPower:
-					newPacket.Type = MessageType.DeviceAcknowledgement;
-					return new AcknowledgementResponse(newPacket);
+					newPacket.Type = MessageType.DeviceStatePower;
+					devData.OutPacket = new StatePowerResponse(newPacket, devData);
+					break;
 				case MessageType.DeviceGetLabel:
+				case MessageType.DeviceSetLabel:
 					newPacket.Type = MessageType.DeviceStateLabel;
-					return new StateLabelResponse(newPacket);
+					devData.OutPacket = new StateLabelResponse(newPacket, devData);
+					break;
 				case MessageType.DeviceGetLocation:
+				case MessageType.DeviceSetLocation:
 					newPacket.Type = MessageType.DeviceStateLocation;
-					return new StateLocationResponse(newPacket);
+					devData.OutPacket = new StateLocationResponse(newPacket, devData);
+					break;
 				case MessageType.DeviceGetGroup:
+				case MessageType.DeviceSetGroup:
 					newPacket.Type = MessageType.DeviceStateGroup;
-					return new StateGroupResponse(newPacket);
+					devData.OutPacket = new StateGroupResponse(newPacket, devData);
+					break;
 				case MessageType.DeviceGetWifiInfo:
 					newPacket.Type = MessageType.DeviceStateWifiInfo;
-					return new StateWifiInfoResponse(newPacket);
+					devData.OutPacket = new StateWifiInfoResponse(newPacket);
+					break;
 				case MessageType.DeviceGetOwner:
+				case MessageType.DeviceSetOwner:
 					newPacket.Type = MessageType.DeviceStateOwner;
-					return new StateOwnerResponse(newPacket);
+					devData.OutPacket = new StateOwnerResponse(newPacket, devData);
+					break;
 				case MessageType.WanGet:
 					newPacket.Type = MessageType.WanState;
-					return new StateWanResponse(newPacket);
+					devData.OutPacket = new StateWanResponse(newPacket);
+					break;
 				case MessageType.TileGetEffect:
+				case MessageType.tileSetEffect:
 					newPacket.Type = MessageType.TileStateEffect;
-					return new StateTileEffectResponse(newPacket);
+					devData.OutPacket = new StateTileEffectResponse(newPacket);
+					break;
 				case MessageType.GetTileTapConfig:
 					newPacket.Type = MessageType.StateTileTapConfig;
-					return new StateTileTapConfigResponse(newPacket);
+					devData.OutPacket = new StateTileTapConfigResponse(newPacket);
+					break;
+				case MessageType.MultiZoneGetEffect:
+				case MessageType.MultiZoneSetEffect:
+					newPacket.Type = MessageType.MultizoneStateEffect;
+					devData.OutPacket = new StateMultizoneStateResponse(newPacket, devData);
+					break;
 				default:
 					newPacket.Type = MessageType.DeviceAcknowledgement;
-					return new AcknowledgementResponse(newPacket);
+					devData.OutPacket = new AcknowledgementResponse(newPacket);
+					break;
 			}
+
+			return devData.OutPacket;
 		}
 	}
 
@@ -124,6 +172,34 @@ namespace LifxEmulator {
 
 
 	/// <summary>
+	/// Response to GetWAN message.
+	/// public enum Status {
+	/// </summary>
+	public class StateMultizoneStateResponse : LifxResponse {
+		public UInt32 Instance { get; }
+		public byte EffectType { get; }
+		public UInt32 Speed { get; }
+		public UInt64 Duration { get; }
+		public Byte[] Parameter { get; }
+
+		internal StateMultizoneStateResponse(LifxPacket newPacket, DeviceData devData) : base(newPacket) {
+			Instance = devData.MultizoneId;
+			EffectType = devData.EffectType;
+			Speed = devData.EffectSpeed;
+			Duration = devData.EffectDur;
+			Parameter = devData.EffectParam;
+			
+			Payload = new Payload(new object[] {
+				Instance, EffectType, (byte) 0, (byte) 0, Speed, Duration,
+				(byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0, (byte) 0,
+				Parameter
+			});
+		}
+	}
+
+
+
+	/// <summary>
 	/// Response to GetLabel message. Provides device label.
 	/// </summary>
 	public class StateOwnerResponse : LifxResponse {
@@ -132,18 +208,9 @@ namespace LifxEmulator {
 
 		public string? Owner { get; }
 
-		internal StateOwnerResponse(LifxPacket newPacket) : base(newPacket) {
-			var oBytes = new byte[] {
-				0xEC, 0x30, 0x7E, 0x9A, 0xAE, 0xC9, 0x4F, 0x72, 0xB3, 0xF8, 0xE7,
-				0x38, 0x44, 0x04, 0x4A, 0x4A
-			};
-			var lBytes = new byte[] {
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00, 0x00
-			};
-			Updated = DateTime.Now;
-			var res = (ushort) 0;
-			Payload = new Payload(new object[] {(byte) 0, oBytes, lBytes, res, Updated});
+		internal StateOwnerResponse(LifxPacket newPacket, DeviceData devData) : base(newPacket) {
+			var oBytes = devData.OwnerPacket;
+			Payload = new Payload(new object[] {oBytes});
 		}
 	}
 
@@ -189,13 +256,17 @@ namespace LifxEmulator {
 		/// </summary>
 		public ushort Index { get; }
 
-		internal StateMultiZoneResponse(LifxPacket newPacket) : base(
+		internal StateMultiZoneResponse(LifxPacket newPacket, DeviceData devData) : base(
 			newPacket) {
 			Count = 8;
 			Index = 0;
 			Colors = new LifxColor[Count];
 			for (var i = Index; i < Count; i++) {
 				Colors[i] = new LifxColor(255, 0, 0);
+			}
+
+			if (devData.ColorArray != null && devData.ColorArray.Length == Count) {
+				Colors = devData.ColorArray;
 			}
 
 			var args = new List<object> {(byte) Count, (byte) Index};
@@ -265,8 +336,8 @@ namespace LifxEmulator {
 	internal class StateLabelResponse : LifxResponse {
 		public string? Label { get; }
 
-		internal StateLabelResponse(LifxPacket newPacket) : base(newPacket) {
-			Label = "Emulator";
+		internal StateLabelResponse(LifxPacket newPacket, DeviceData devData) : base(newPacket) {
+			Label = devData.Label;	
 			Payload = new Payload(new object[] {Label});
 		}
 	}
@@ -352,15 +423,29 @@ namespace LifxEmulator {
 			Payload.Rewind();
 		}
 	}
+	
+	public class StateLightPowerResponse : LifxResponse {
+		/// <summary>
+		/// Zero implies standby and non-zero sets a corresponding power draw level. Currently only 0 and 65535 are supported.
+		/// </summary>
+		public ushort Level { get; set; }
+
+		internal StateLightPowerResponse(LifxPacket packet, DeviceData devData) : base(packet) {
+			Level = devData.PowerLevel;
+			
+			Payload = new Payload(new object[]{Level});
+		}
+	}
 
 	public class StatePowerResponse : LifxResponse {
 		/// <summary>
 		/// Zero implies standby and non-zero sets a corresponding power draw level. Currently only 0 and 65535 are supported.
 		/// </summary>
-		public ulong Level { get; set; }
+		public ushort Level { get; set; }
 
-		internal StatePowerResponse(LifxPacket packet) : base(packet) {
-			Level = 65535;
+		internal StatePowerResponse(LifxPacket packet, DeviceData devData) : base(packet) {
+			Level = devData.PowerLevel;
+			
 			var args = new List<object> {Level};
 			Payload = new Payload(args.ToArray());
 		}
@@ -369,17 +454,15 @@ namespace LifxEmulator {
 	public class StateLocationResponse : LifxResponse {
 		public byte[] Location { get; set; }
 
-		public DateTime Updated { get; set; }
+		public ulong Updated { get; set; }
 
 		public string Label { get; set; }
 
-		internal StateLocationResponse(LifxPacket newPacket) : base(newPacket) {
-			var rand = new Random();
-			var location = new byte[16];
-			rand.NextBytes(location);
-			Location = location;
-			Label = "Emu room";
-			Updated = DateTime.Now;
+		internal StateLocationResponse(LifxPacket newPacket, DeviceData devData) : base(newPacket) {
+			Location = devData.Location;
+			Label = devData.LocationLabel;
+			Updated = devData.LocationUpdated;
+
 			Payload = new Payload(new object[] {Location, Label, Updated});
 		}
 	}
@@ -390,17 +473,15 @@ namespace LifxEmulator {
 	public class StateGroupResponse : LifxResponse {
 		public byte[] Group { get; set; }
 
-		public DateTime Updated { get; set; }
+		public ulong Updated { get; set; }
 
 		public string Label { get; set; }
 
-		internal StateGroupResponse(LifxPacket newPacket) : base(newPacket) {
-			var rand = new Random();
-			var location = new byte[16];
-			rand.NextBytes(location);
-			Group = location;
-			Label = "Emu group";
-			Updated = DateTime.Now;
+		internal StateGroupResponse(LifxPacket newPacket, DeviceData devData) : base(newPacket) {
+			
+			Group = devData.Group;
+			Label = devData.GroupLabel;
+			Updated = devData.GroupUpdated;
 			Payload = new Payload(new object[] {Group, Label, Updated});
 		}
 	}
@@ -424,7 +505,7 @@ namespace LifxEmulator {
 		/// </summary>
 		public ushort Index { get; private set; }
 
-		internal StateExtendedColorZonesResponse(LifxPacket newPacket) :
+		internal StateExtendedColorZonesResponse(LifxPacket newPacket, DeviceData devData) :
 			base(newPacket) {
 			Colors = new List<LifxColor>();
 			Count = 8;
@@ -433,6 +514,9 @@ namespace LifxEmulator {
 				Colors.Add(new LifxColor(255, 0, 0));
 			}
 
+			if (devData.ColorArray != null && devData.ColorArray.Length == 64) {
+				Colors = devData.ColorArray.ToList();
+			}
 			var args = new List<object> {Count, Index, (byte) Colors.Count};
 			args.AddRange(Colors);
 			Payload = new Payload(args.ToArray());
@@ -461,25 +545,54 @@ namespace LifxEmulator {
 		/// <summary>
 		/// Hue
 		/// </summary>
-		public ushort Hue { get; }
+		public LifxColor Color { get; }
 
+		internal LightStateResponse(LifxPacket newPacket, DeviceData devData) : base(newPacket) {
+				Label = devData.Label;
+				Brightness = devData.PowerLevel;
+				Color = devData.Color;
+				var args = new List<object> {
+				Color,
+				(byte)0, // Reserved
+				(byte)0, // Reserved
+				(byte)0, // Reserved
+				Brightness,
+				Label,
+				(byte)0, // Reserved
+				(byte)0, // Reserved
+				(byte)0, // Reserved
+				(byte)0, // Reserved
+				(byte)0, // Reserved
+				(byte)0, // Reserved
+				(byte)0, // Reserved
+				(byte)0 // Reserved
+			};
+			Payload = new Payload(args.ToArray());
+		}
+	}
+	
+	/// <summary>
+	/// Sent by a device to provide the current light state
+	/// </summary>
+	public class LightStateLightRestoreResponse : LifxResponse {
 		/// <summary>
-		/// Bulb color temperature
+		/// Power state
 		/// </summary>
-		public ushort Kelvin { get; }
+		public LifxColor Color { get; }
+		
+		public bool RestoreWhite { get; }
+		
+		public bool RestoreState { get; }
 
-		/// <summary>
-		/// Saturation (0=desaturated, 65535 = fully saturated)
-		/// </summary>
-		public ushort Saturation { get; }
-
-		internal LightStateResponse(LifxPacket newPacket) : base(newPacket) {
+		
+		
+		internal LightStateLightRestoreResponse(LifxPacket newPacket, DeviceData devData) : base(newPacket) {
+			Color = devData.Color;
 			var args = new List<object> {
-				new LifxColor(255, 0, 0),
-				0,
-				(uint) 65535,
-				"Test Light",
-				(ulong) 0
+				Color,
+				(byte)0,
+				(byte)0,
+				(byte)0 // Reserved
 			};
 			Payload = new Payload(args.ToArray());
 		}
@@ -504,31 +617,11 @@ namespace LifxEmulator {
 		/// </summary>
 		public uint Version { get; }
 
-		internal StateVersionResponse(LifxPacket newPacket, int deviceVersion) : base(
+		internal StateVersionResponse(LifxPacket newPacket, Product productData) : base(
 			newPacket) {
 			Product = 32;
 
-			switch (deviceVersion) {
-				case 0:
-					Product = 1;
-					break;
-				case 1:
-					Product = 31;
-					break;
-				case 2:
-					Product = 32;
-					break;
-				case 3:
-					Product = 38;
-					break;
-				case 4:
-					Product = 55;
-					break;
-				case 5:
-					Product = 70;
-					break;
-			}
-
+			Product = (uint) productData.pid;
 			Vendor = 1;
 			Version = 117506305;
 			var args = new List<object> {Vendor, Product, Version};
@@ -552,7 +645,7 @@ namespace LifxEmulator {
 		/// </summary>
 		public uint VersionMinor { get; }
 
-		internal StateHostFirmwareResponse(LifxPacket newPacket, int deviceVersion) : base(
+		internal StateHostFirmwareResponse(LifxPacket newPacket) : base(
 			newPacket) {
 			Build = DateTime.Now;
 			ulong reserved = 0;

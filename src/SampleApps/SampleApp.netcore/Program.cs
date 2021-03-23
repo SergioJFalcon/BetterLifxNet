@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using LifxNetPlus;
@@ -25,16 +26,19 @@ namespace SampleApp.netcore {
 		private static async void ClientDeviceDiscovered(object sender, LifxClient.DeviceDiscoveryEventArgs e) {
 			Console.WriteLine($"Device {e.Device.MacAddressName} found @ {e.Device.HostName}");
 
+			var pwr = _client.SetLightPowerAsync(e.Device as LightBulb,true);
+			
 			var foo2 = await _client.GetWanAsync(e.Device);
 			Console.WriteLine("Result of 201: " + JsonConvert.SerializeObject(foo2));
 
 
 			var foo1 = await _client.GetDeviceOwnerAsync(e.Device);
+			//Console.WriteLine("Owner: " + JsonConvert.SerializeObject(foo1));
+			var pstring = foo1.Payload.ToArray().Select(b => "0x" + b.ToString("X2")).ToList();
 			Console.WriteLine("Owner: " +
-			                  string.Join(",", (from a in foo1.Owner select a.ToString("X2")).ToArray()));
-			Console.WriteLine("Label: " +
-			                  string.Join(",", (from a in foo1.Label select a.ToString("X2")).ToArray()));
-
+			                  string.Join(',', pstring));
+			
+			
 
 			var wifi = await _client.GetWifiFirmwareAsync(e.Device);
 			Console.WriteLine("Wifi info: " + JsonConvert.SerializeObject(wifi));

@@ -3,244 +3,218 @@ using System.Collections.Generic;
 using System.Drawing;
 
 namespace LifxNetPlus {
-	/// <summary>
-	/// Extend the normal System.Drawing.Color class and make it work with HSBK
-	/// </summary>
+	[Serializable]
 	public class LifxColor {
-		private static double Tolerance
-			=> 0.000000000000001;
 
-		/// <summary>
-		/// Blue
-		/// </summary>
-		public byte B {
-			get => _color.B;
-			set => _color = Color.FromArgb(_color.A, _color.R, _color.G, value);
-		}
-
-		/// <summary>
-		/// Green
-		/// </summary>
-		public byte G {
-			get => _color.G;
-			set => _color = Color.FromArgb(_color.A, _color.R, value, _color.B);
-		}
-
-
-		/// <summary>
-		/// Red
-		/// </summary>
+		private byte _r;
 		public byte R {
-			get => _color.R;
-			set => _color = Color.FromArgb(_color.A, value, _color.G, _color.B);
+			get => _r;
+			set {
+				_r = value;
+				SetHsb();
+				ScaleHsb();
+			}
 		}
 
-		/// <summary>
-		/// Retrieve the base System.Drawing.Color of this Color
-		/// </summary>
-		public Color Color => _color;
+		private byte _g;
 
-		/// <summary>
-		/// The lightness of this Color. The lightness ranges from 0.0 through 1.0, where 0.0 represents black and 1.0 represents white.
-		/// </summary>
-		public float Brightness {
-			get => _color.GetBrightness();
-			set => _color = HsbToRgb(_color.GetHue(), _color.GetSaturation(), value);
+		public byte G {
+			get => _g;
+			set {
+				_g = value;
+				SetHsb();
+				ScaleHsb();
+			}
 		}
 
-		/// <summary>
-		/// The hue, in degrees, of this Color. The hue is measured in degrees, ranging from 0.0 through 360.0, in HSL color space.
-		/// </summary>
+		private byte _b;
+		public byte B {
+			get => _b;
+			set {
+				_b = value;
+				SetHsb();
+				ScaleHsb();
+			}
+		}
+		public byte A { get; set; }
+
+		private float _hue;
 		public float Hue {
-			get => _color.GetHue();
-			set => _color = HsbToRgb(value, _color.GetSaturation(), _color.GetBrightness());
+			get => _hue;
+			set {
+				_hue = value;
+				ScaleHsb();
+				SetRgb();
+			}
 		}
 
-		/// <summary>
-		/// The temperature of this Color. The temperature ranges from 2700-9000
-		/// </summary>
-		public ushort K { get; set; }
-
-		/// <summary>
-		/// The saturation of this Color. The saturation ranges from 0.0 through 1.0, where 0.0 is grayscale and 1.0 is the most saturated.
-		/// </summary>
+		private float _saturation;
 		public float Saturation {
-			get => _color.GetSaturation();
-			set => _color = HsbToRgb(_color.GetHue(), value, _color.GetBrightness());
+			get => _saturation;
+			set {
+				_saturation = value;
+				ScaleHsb();
+				SetRgb();
+			}
 		}
 
-		/// <summary>
-		/// The brightness of this color. The brightness range is 0 - 65535
-		/// </summary>
-		public ushort LifxBrightness => (ushort) (_color.GetBrightness() * 65535);
+		private float _brightness;
+		public float Brightness {
+			get => _brightness;
+			set {
+				_brightness = value;
+				ScaleHsb();
+				SetRgb();
+			}
+		}
 
-		/// <summary>
-		/// The hue, in the standard Lifx format, of this Color. The lifx hue is measured from 0 - 65565. 
-		/// </summary>
-		public ushort LifxHue => (ushort) ((_color.GetHue() / 360) * 65536);
+		private ushort _hueScaled;
+		public ushort HueScaled {
+			get => _hueScaled;
+			set {
+				_hueScaled = value;
+				DescaleHsb();
+				SetRgb();
+			}
+		}
 
-		/// <summary>
-		/// The saturation of this color in Lifx format. Range is 0 - 65535;
-		/// </summary>
-		public ushort LifxSaturation => (ushort) (_color.GetSaturation() * 65535);
+		private ushort _saturationScaled;
+		public ushort SaturationScaled {
+			get => _saturationScaled;
+			set {
+				_saturationScaled = value;
+				DescaleHsb();
+				SetRgb();
+			}
+		}
 
-		private Color _color;
+		private ushort _brightnessScaled;
+		public ushort BrightnessScaled {
+			get => _brightnessScaled;
+			set {
+				_brightnessScaled = value;
+				DescaleHsb();
+				SetRgb();
+			}
+		}
+		public ushort Kelvin { get; set; }
+		
+		public Color Color => Color.FromArgb(_r, _g, _b);
 
-		/// <summary>
-		/// Create a new LifxColor
-		/// </summary>
 		public LifxColor() {
-			_color = Color.FromArgb(255, 0, 0, 0);
-			K = 2700;
+			_hueScaled = 0;
+			_brightnessScaled = 0;
+			_saturationScaled = 0;
+			DescaleHsb();
+			SetRgb();
 		}
 
-		/// <summary>
-		/// Create a color from HSBK values
-		/// </summary>
-		/// <param name="h">Hue: range 0 to 65535.</param>
-		/// <param name="s">Saturation: range 0 to 65535.</param>
-		/// <param name="b">Brightness: range 0 to 65535.</param>
-		/// <param name="k">Kelvin: range 2500° (warm) to 9000° (cool). Default is 2700.</param>
-		public LifxColor(ushort h, ushort s, ushort b, ushort k = 2700) {
-			var hue = h / 65535 * 360;
-			var sat = s / 65535f;
-			var bri = b / 65535f;
-			_color = HsbToRgb(hue, sat, bri);
-			K = k;
+		public LifxColor(ushort hue, ushort sat, ushort bri, ushort k) {
+			_hueScaled = hue;
+			_saturationScaled = sat;
+			_brightnessScaled = bri;
+			Kelvin = k;
+			DescaleHsb();
+			SetRgb();
 		}
 
-		/// <summary>
-		/// Create a color from RGB Value, with default alpha of 255
-		/// </summary>
-		/// <param name="r">Red: Range 0 to 255</param>
-		/// <param name="g">Green: Range 0 to 255</param>
-		/// <param name="b">Blue: Range 0 to 255</param>
-		public LifxColor(int r, int g, int b) {
-			_color = Color.FromArgb(255, r, g, b);
-			K = 2700;
+		public LifxColor(byte r, byte g, byte b, byte a= 255) {
+			_r = r;
+			_g = g;
+			_b = b;
+			A = a;
+			SetHsb();
+			ScaleHsb();
 		}
 
-		/// <summary>
-		/// Create a LifxColor from a System.Drawing.Color
-		/// </summary>
-		/// <param name="color">Base System.Drawing.Color</param>
 		public LifxColor(Color color) {
-			_color = color;
-			K = 2700;
-		}
+			_r = color.R;
+			_g = color.G;
+			_b = color.B;
+			A = color.A;
+			SetHsb();
+			ScaleHsb();
 
-		/// <summary>
-		/// Serialize our color to a byte array
-		/// </summary>
-		/// <returns>HSBK formatted array of bytes.</returns>
+		}
+		
 		public byte[] ToBytes() {
 			var output = new List<byte>();
-			var hue = Hue / 360 * 65535;
-			var sat = Saturation * 65535;
-			var bri = Brightness * 65535;
-			foreach (var u in new[] {(ushort) hue, (ushort) sat, (ushort) bri, K}) {
+			foreach (var u in new[] {_hueScaled, _saturationScaled, _brightnessScaled, Kelvin}) {
 				output.AddRange(BitConverter.GetBytes(u));
 			}
-
 			return output.ToArray();
 		}
-
-
-		/// <summary>
-		/// Return System.Drawing.Color RGB string representation of the color
-		/// </summary>
-		/// <returns></returns>
-		public string ToRgbString() {
-			return R + ", " + G + ", " + B;
-		}
-
+		
 		/// <summary>
 		/// Return Lifx HSBK string representation of the color
 		/// </summary>
 		/// <returns></returns>
 		public string ToHsbkString() {
-			var hue = Hue / 360 * 65535;
-			var sat = 65535 * Saturation;
-			var bri = 65536 * Brightness;
-			return hue + ", " + sat + ", " + bri + ", " + K;
+			return _hueScaled + ", " + _saturationScaled + ", " + _brightnessScaled + ", " + Kelvin;
 		}
 
+		private void SetHsb() {
+			int max = Math.Max(R, Math.Max(G, B));
+			int min = Math.Min(R, Math.Min(G, B));
+			var color = Color.FromArgb(R, G, B);
+			_hue = color.GetHue();
+			_saturation = max == 0 ? 0 : 1f - 1f * min / max;
+			_brightness = max / 255f;
+		}
 
-		/// <summary>
-		/// Converts HSB to RGB, with a specified output Alpha.
-		/// Arguments are limited to the defined range:
-		/// does not raise exceptions.
-		/// </summary>
-		/// <param name="h">Hue, must be in [0, 360].</param>
-		/// <param name="s">Saturation, must be in [0, 1].</param>
-		/// <param name="b">Brightness, must be in [0, 1].</param>
-		/// <param name="a">Output Alpha, must be in [0, 255].</param>
-		private static Color HsbToRgb(double h, double s, double b, int a = 255) {
-			h = Math.Max(0D, Math.Min(360D, h));
-			s = Math.Max(0D, Math.Min(1D, s));
-			b = Math.Max(0D, Math.Min(1D, b));
-			a = Math.Max(0, Math.Min(255, a));
+		private void DescaleHsb() {
+			_hue = (_hueScaled & 65535) / (float) 65535 * 360;
+			_saturation = (_saturationScaled & 65535) / (float) 65535;
+			_brightness = (_brightnessScaled & 65535) / (float) 65535;
+		}
 
-			var r = 0D;
-			var g = 0D;
-			var bl = 0D;
-
-			if (Math.Abs(s) < 0.000000000000001) {
-				r = g = bl = b;
-			} else {
-				// the argb wheel consists of 6 sectors. Figure out which sector
-				// you're in.
-				var sectorPos = h / 60D;
-				var sectorNumber = (int) Math.Floor(sectorPos);
-				// get the fractional part of the sector
-				var fractionalSector = sectorPos - sectorNumber;
-
-				// calculate values for the three axes of the argb.
-				var p = b * (1D - s);
-				var q = b * (1D - s * fractionalSector);
-				var t = b * (1D - s * (1D - fractionalSector));
-
-				// assign the fractional colors to r, g, and b based on the sector
-				// the angle is in.
-				switch (sectorNumber) {
-					case 0:
-						r = b;
-						g = t;
-						bl = p;
-						break;
-					case 1:
-						r = q;
-						g = b;
-						bl = p;
-						break;
-					case 2:
-						r = p;
-						g = b;
-						bl = t;
-						break;
-					case 3:
-						r = p;
-						g = q;
-						bl = b;
-						break;
-					case 4:
-						r = t;
-						g = p;
-						bl = b;
-						break;
-					case 5:
-						r = b;
-						g = p;
-						bl = q;
-						break;
-				}
+		private void ScaleHsb() {
+			_hueScaled = (ushort) (int)(_hue * 65536);
+			_saturationScaled = (ushort) (int)(Saturation * 65535);
+			_brightnessScaled = (ushort) (int)(Brightness * 65535);
+		}
+		
+		private void SetRgb() {
+			var hi = Convert.ToInt32(Math.Floor(_hue / 60)) % 6;
+			var f = _hue / 60 - Math.Floor(_hue / 60);
+			var bri = _brightness * 255;
+			var v = Convert.ToInt32(bri);
+			var p = Convert.ToInt32(bri * (1 - _saturation));
+			var q = Convert.ToInt32(bri * (1 - f * _saturation));
+			var t = Convert.ToInt32(bri * (1 - (1 - f) * _saturation));
+			A = 255;
+			switch (hi) {
+				case 0:
+					_r = (byte) v;
+					_g = (byte) t;
+					_b = (byte) p;
+					break;
+				case 1:
+					_r = (byte) q;
+					_g = (byte) v;
+					_b = (byte) p;
+					break;
+				case 2:
+					_r = (byte) p;
+					_g = (byte) v;
+					_b = (byte) t;
+					break;
+				case 3:
+					_r = (byte) p;
+					_g = (byte) q;
+					_b = (byte) v;
+					break;
+				case 4:
+					_r = (byte) t;
+					_g = (byte) p;
+					_b = (byte) v;
+					break;
+				default:
+					_r = (byte) v;
+					_g = (byte) p;
+					_b = (byte) q;
+					break;
 			}
-
-			return Color.FromArgb(
-				a,
-				Math.Max(0, Math.Min(255, Convert.ToInt32(double.Parse($"{r * 255D:0.00}")))),
-				Math.Max(0, Math.Min(255, Convert.ToInt32(double.Parse($"{g * 255D:0.00}")))),
-				Math.Max(0, Math.Min(255, Convert.ToInt32(double.Parse($"{bl * 250D:0.00}")))));
 		}
 	}
 }

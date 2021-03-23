@@ -49,6 +49,7 @@
         <Reference Include="System.Xml" />
     </ItemGroup>
     <ItemGroup>
+        <Compile Include="DeviceData.cs" />
         <Compile Include="Program.cs" />
         <Compile Include="LifxResponses.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />

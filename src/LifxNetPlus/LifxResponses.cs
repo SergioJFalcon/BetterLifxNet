@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Newtonsoft.Json;
 
 namespace LifxNetPlus {
@@ -460,7 +461,7 @@ namespace LifxNetPlus {
 		public string? Label { get; }
 
 		internal StateLabelResponse(LifxPacket packet) : base(packet) {
-			Label = packet.Payload.GetString().Replace("\0", "");
+			Label = packet.Payload.GetString(32).Replace("\0", "");
 		}
 	}
 
@@ -468,15 +469,15 @@ namespace LifxNetPlus {
 	/// Response to GetLabel message. Provides device label.
 	/// </summary>
 	public class StateOwnerResponse : LifxResponse {
-		public byte[] Label { get; }
+		public string Label { get; }
 
-		public byte[] Owner { get; }
+		public string Owner { get; }
 		public ulong Updated { get; }
 
 		internal StateOwnerResponse(LifxPacket packet) : base(packet) {
 			packet.Payload.Advance(2); // Reserved 1
-			Owner = packet.Payload.GetBytes(16);
-			Label = packet.Payload.GetBytes(16);
+			Owner = packet.Payload.GetString(16);
+			Label = packet.Payload.GetString(16);
 			packet.Payload.Advance(2); // Reserved 2
 			Updated = packet.Payload.GetUInt64();
 		}
@@ -712,6 +713,8 @@ namespace LifxNetPlus {
 		public bool IsOn { get; }
 
 		internal LightPowerResponse(LifxPacket packet) : base(packet) {
+			//var bString = string.Join(",", (from a in packet.Payload.ToArray() select a.ToString("X2")).ToArray());
+			//Debug.WriteLine("Power payload: " + bString);
 			IsOn = packet.Payload.GetUInt16() > 0;
 		}
 	}

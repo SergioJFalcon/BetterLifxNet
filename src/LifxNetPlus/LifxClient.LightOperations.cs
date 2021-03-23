@@ -5,6 +5,16 @@ using System.Threading.Tasks;
 
 namespace LifxNetPlus {
 	public partial class LifxClient {
+		
+		public enum WaveFormType : ushort {
+			//Device Messages
+			Saw = 0,
+			Sine = 1,
+			HalfSine = 2,
+			Triangle = 3,
+			Pulse = 4
+		}
+
 		private readonly Dictionary<uint, Action<LifxResponse>> _taskCompletions =
 			new Dictionary<uint, Action<LifxResponse>>();
 
@@ -61,6 +71,7 @@ namespace LifxNetPlus {
 			Debug.WriteLine(
 				$"Sending LightSetPower(on={isOn},duration={duration}ms) to {bulb}");
 			var packet = new LifxPacket(MessageType.LightSetPower, (ushort) (isOn ? 65535 : 0), b);
+			packet.ResponseRequired = true;
 			await BroadcastMessageAsync<AcknowledgementResponse>(bulb, packet).ConfigureAwait(false);
 		}
 
@@ -74,8 +85,9 @@ namespace LifxNetPlus {
 				throw new ArgumentNullException(nameof(bulb));
 
 			var packet = new LifxPacket(MessageType.LightGetPower);
+			packet.ResponseRequired = true;
 			return (await BroadcastMessageAsync<LightPowerResponse>(
-				bulb, packet).ConfigureAwait(false)).IsOn;
+				bulb, packet)).IsOn;
 		}
 
 		/// <summary>
@@ -115,6 +127,32 @@ namespace LifxNetPlus {
 			packet.ResponseRequired = true;
 			packet.Payload = new Payload(new object[] {(short) r,(short) g,(short) b,(short) w, dur});
 			return await BroadcastMessageAsync<LightStateResponse>(bulb, packet);
+		}
+
+		public async Task<LightStateResponse> SetWaveForm(Device d, bool transient, LifxColor color, uint period,
+			float cycles, short skewRatio, WaveFormType type) {
+			if (d == null) throw new ArgumentNullException(nameof(d));
+			var packet = new LifxPacket(MessageType.LightSetWaveform) {
+				ResponseRequired = true,
+				Payload = new Payload(new object[] {
+					(byte) 0, //reserved
+					transient, color, period, cycles, skewRatio, type
+				})
+			};
+			return await BroadcastMessageAsync<LightStateResponse>(d, packet);
+		}
+		
+		public async Task<LightStateResponse> SetWaveFormOptional(Device d, bool transient, LifxColor color, uint period,
+			float cycles, short skewRatio, WaveFormType type, bool setHue, bool setSat, bool setBri, bool setK) {
+			if (d == null) throw new ArgumentNullException(nameof(d));
+			var packet = new LifxPacket(MessageType.LightSetWaveform) {
+				ResponseRequired = true,
+				Payload = new Payload(new object[] {
+					(byte) 0, //reserved
+					transient, color, period, cycles, skewRatio, type, setHue, setSat, setBri, setK
+				})
+			};
+			return await BroadcastMessageAsync<LightStateResponse>(d, packet);
 		}
 
 

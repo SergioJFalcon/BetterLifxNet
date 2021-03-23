@@ -104,7 +104,7 @@ namespace SampleApp.Universal {
 			this.hue = hue.HasValue ? hue.Value : this.hue;
 			this.saturation = saturation.HasValue ? saturation.Value : this.saturation;
 			var b = brightness.HasValue ? brightness.Value : (UInt16) brightnessSlider.Value;
-			var color = new LifxColor(this.hue, this.saturation, b);
+			var color = new LifxColor(this.hue, this.saturation, b, 2700);
 			var setColorTask = _client.SetColorAsync(bulb, color);
 			var throttleTask = Task.Delay(50); //Ensure task takes minimum 50 ms (no more than 20 messages per second)
 			pendingUpdateColor = Task.WhenAll(setColorTask, throttleTask);

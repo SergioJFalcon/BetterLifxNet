@@ -141,7 +141,10 @@ namespace LifxNetPlus {
 
 		private static LifxResponse ParseMessage(byte[] packet, IPEndPoint ep) {
 			var fh = new LifxPacket(packet);
-			Debug.WriteLine($"{ep.Address}L=>LOCAL::{fh.Type}: " + JsonConvert.SerializeObject(packet));
+			Debug.WriteLine($"{ep.Address}=>LOCAL::{fh.Type}: " + JsonConvert.SerializeObject(packet));
+			if (fh.Type == MessageType.LightSetPower) {
+				var bString = string.Join(",", (from a in fh.Payload.ToArray() select a.ToString("X2")).ToArray());
+			}
 			return LifxResponse.Create(fh);
 		}
 	}
