@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
@@ -71,49 +72,67 @@ namespace LifxNetPlus {
 					ProcessDeviceDiscoveryMessage(remote.Address, (StateServiceResponse) msg);
 					break;
 				default:
-					if (_taskCompletions.ContainsKey(msg.Packet.Source)) {
-						var tcs = _taskCompletions[msg.Packet.Source];
+					if (_taskCompletions.ContainsKey(msg.Packet.Sequence)) {
+						var tcs = _taskCompletions[msg.Packet.Sequence];
 						tcs(msg);
 					}
 
 					break;
 			}
 
-			if (remote.Port == 56700)
-				Debug.WriteLine("Received {0} from {1}:{2}", msg.Type, remote,
-					string.Join(",", (from a in data select a.ToString("X2")).ToArray()));
+			// if (remote.Port == 56700)
+			// 	Debug.WriteLine("Received {0} from {1}:{2}", msg.Type, remote,
+			// 		string.Join(",", (from a in data select a.ToString("X2")).ToArray()));
 		}
 
 		private Task<T> BroadcastMessageAsync<T>(LifxPacket packet) where T : LifxResponse {
-			Debug.WriteLine("Broadcasting discovery packet.");
 			return BroadcastPayloadAsync<T>("255.255.255.255", packet);
 		}
+		
+		public static string HexString(byte[] ba) {
+			StringBuilder hex = new StringBuilder(ba.Length * 2);
+			foreach (byte b in ba)
+				hex.AppendFormat("{0:x2}", b);
+			return hex.ToString();
+		}
 
-		private Task<T> BroadcastMessageAsync<T>(Device device, LifxPacket packet) where T : LifxResponse {
+		private Task<T> BroadcastMessageAsync<T>(Device device, LifxPacket packet, bool awaitResponse=true) where T : LifxResponse {
 			var hostname = device.HostName;
 			packet.Target = device.MacAddress;
-			Debug.WriteLine($"LOCAL=>{hostname}::{packet.Type}: " + JsonConvert.SerializeObject(packet));
-			return BroadcastPayloadAsync<T>(hostname, packet);
+			var response = BroadcastPayloadAsync<T>(hostname, packet);
+			var bytes = packet.Encode();
+			var ep = new IPEndPoint(IPAddress.Parse(device.HostName), 56700);
+			var pack = ParseMessage(bytes, ep, false);
+			//Debug.WriteLine($"LOCAL=>{hostname}::{packet.Type}: " + JsonConvert.SerializeObject(pack));
+			//Debug.WriteLine("PACK BYTES: " + HexString(pack.Encode()));
+			return response;
+		}
+		
+		private async Task BroadcastMessageAsync(Device device, LifxPacket packet) {
+			var hostname = device.HostName;
+			packet.Target = device.MacAddress;
+			BroadcastPayloadAsync<AcknowledgementResponse>(hostname, packet).ConfigureAwait(false);
+			var bytes = packet.Encode();
+			var ep = new IPEndPoint(IPAddress.Parse(device.HostName), 56700);
+			var pack = ParseMessage(bytes, ep, false);
+			//Debug.WriteLine($"LOCAL=>{hostname}::{packet.Type}: " + JsonConvert.SerializeObject(pack));
 		}
 
 		private async Task<T> BroadcastPayloadAsync<T>(string host, LifxPacket packet)
 			where T : LifxResponse {
 			if (_socket == null)
 				throw new InvalidOperationException("No valid socket");
-			var data = packet.Encode();
-			Debug.WriteLine(
-				string.Join(",", (from a in data select a.ToString("X2")).ToArray()));
-
+			
 
 			TaskCompletionSource<T>? tcs = null;
-			if (packet.Identifier > 0 &&
+			if (packet.Sequence > 0 &&
 			    typeof(T) != typeof(UnknownResponse)) {
 				tcs = new TaskCompletionSource<T>();
 				Action<LifxResponse> action = (r) => {
 					if (r.GetType() == typeof(T))
 						tcs.TrySetResult((T) r);
 				};
-				_taskCompletions[packet.Identifier] = action;
+				_taskCompletions[packet.Sequence] = action;
 			}
 
 			var msg = packet.Encode();
@@ -131,7 +150,7 @@ namespace LifxNetPlus {
 				try {
 					result = await tcs.Task.ConfigureAwait(false);
 				} finally {
-					_taskCompletions.Remove(packet.Identifier);
+					_taskCompletions.Remove(packet.Sequence);
 				}
 			}
 
@@ -139,13 +158,14 @@ namespace LifxNetPlus {
 		}
 
 
-		private static LifxResponse ParseMessage(byte[] packet, IPEndPoint ep) {
+		public static LifxResponse ParseMessage(byte[] packet, IPEndPoint ep = null, bool log = true) {
+			if (ep == null) ep = new IPEndPoint(IPAddress.Any, 56700);
 			var fh = new LifxPacket(packet);
-			Debug.WriteLine($"{ep.Address}=>LOCAL::{fh.Type}: " + JsonConvert.SerializeObject(packet));
-			if (fh.Type == MessageType.LightSetPower) {
-				var bString = string.Join(",", (from a in fh.Payload.ToArray() select a.ToString("X2")).ToArray());
-			}
-			return LifxResponse.Create(fh);
+			
+			var res = LifxResponse.Create(fh);
+			//if (log)Debug.WriteLine($"{ep.Address}=>LOCAL::{res.Type}: " + JsonConvert.SerializeObject(res));
+
+			return res;
 		}
 	}
 }

@@ -35,19 +35,16 @@ namespace LifxNetPlus {
 
 		private void ProcessDeviceDiscoveryMessage(IPAddress remoteAddress, StateServiceResponse msg) {
 			string id = msg.TargetMacAddressName;
-			Debug.WriteLine($"Processing device discovery message for {remoteAddress}: {id}");
-
+			
 			if (_discoveredBulbs.ContainsKey(id)) {
 				_discoveredBulbs[id].LastSeen = DateTime.UtcNow; //Update datestamp
 				_discoveredBulbs[id].HostName = remoteAddress.ToString(); //Update hostname in case IP changed
-				Debug.WriteLine("Device already discovered, skipping.");
 				return;
 			}
 
-			if (msg.Source != _discoverSourceId || //did we request the discovery?
+			if (msg.Source != MessageId.GetSource() || //did we request the discovery?
 			    _discoverCancellationSource == null ||
 			    _discoverCancellationSource.IsCancellationRequested) {
-				Debug.WriteLine("Source mismatch or cancellation...");
 				return;
 			}
 
@@ -57,7 +54,6 @@ namespace LifxNetPlus {
 			var svc = msg.Service;
 			var port = msg.Port;
 			var lastSeen = DateTime.UtcNow;
-			Debug.WriteLine("Creating generic device: " + address + " and " + port);
 			var device = new LightBulb(address, mac, svc, port) {
 				LastSeen = lastSeen
 			};
@@ -80,18 +76,16 @@ namespace LifxNetPlus {
 				return;
 			_discoverCancellationSource = new CancellationTokenSource();
 			var token = _discoverCancellationSource.Token;
-			_discoverSourceId = MessageId.GetNextIdentifier();
-			var discoPacket = new LifxPacket(_discoverSourceId, MessageType.DeviceGetService);
+			var discoPacket = new LifxPacket(MessageType.DeviceGetService);
 			//Start discovery thread
 			Task.Run(async () => {
-				Debug.WriteLine("Sending GetServices...");
 				await BroadcastMessageAsync<UnknownResponse>(discoPacket);
 				while (!token.IsCancellationRequested) {
 					try {
 						//await BroadcastMessageAsync<UnknownResponse>(null, header,
 						//MessageType.DeviceGetService);
 					} catch (Exception e) {
-						Debug.WriteLine("Broadcast exception: " + e.Message + e.StackTrace);
+						//Debug.WriteLine("Broadcast exception: " + e.Message + e.StackTrace);
 					}
 
 					await Task.Delay(1, token);

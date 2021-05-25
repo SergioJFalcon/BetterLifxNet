@@ -6,11 +6,11 @@ namespace LifxEmulator {
 	public class DeviceData {
 		public string Label { get; set; }
 		public byte[] Group { get; set; }
-		public ulong GroupUpdated { get; set; }
+		public DateTime GroupUpdated { get; set; }
 		public string GroupLabel { get; set; }
 		public byte[] Location { get; set; }
 		public string LocationLabel { get; set; }
-		public ulong LocationUpdated { get; set; }
+		public DateTime LocationUpdated { get; set; }
 		public ushort PowerLevel { get; set; }
 		public LifxColor Color { get; set; }
 		public LifxColor[] ColorArray { get; set; }
@@ -35,12 +35,12 @@ namespace LifxEmulator {
 			rand.NextBytes(location);
 			Location = location;
 			LocationLabel = "Emu room";
-			LocationUpdated = 0;
+			LocationUpdated = DateTime.Now;
 			var group = new byte[16];
 			rand.NextBytes(group);
 			Group = group;
 			GroupLabel = "Emu group";
-			GroupUpdated = 0;
+			GroupUpdated = DateTime.Now;
 			var thirtyBits = (uint) rand.Next(1 << 30);
 			var twoBits = (uint) rand.Next(1 << 2);
 			MultizoneId = (thirtyBits << 2) | twoBits;

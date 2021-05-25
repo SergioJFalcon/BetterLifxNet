@@ -68,8 +68,6 @@ namespace LifxNetPlus {
 
 			var b = BitConverter.GetBytes((ushort) duration);
 
-			Debug.WriteLine(
-				$"Sending LightSetPower(on={isOn},duration={duration}ms) to {bulb}");
 			var packet = new LifxPacket(MessageType.LightSetPower, (ushort) (isOn ? 65535 : 0), b);
 			packet.ResponseRequired = true;
 			await BroadcastMessageAsync<AcknowledgementResponse>(bulb, packet).ConfigureAwait(false);
@@ -100,7 +98,6 @@ namespace LifxNetPlus {
 		public async Task<LightStateResponse> SetColorAsync(LightBulb bulb, LifxColor color, int duration = 0) {
 			if (bulb == null) throw new ArgumentNullException(nameof(bulb));
 			if (duration > uint.MaxValue || duration < 0) throw new ArgumentOutOfRangeException(nameof(duration));
-			Debug.WriteLine("Setting color to {0}", bulb);
 			var dur = (uint) duration;
 			var packet = new LifxPacket(MessageType.LightSetColor);
 			packet.ResponseRequired = true;
@@ -121,7 +118,6 @@ namespace LifxNetPlus {
 		public async Task<LightStateResponse> SetRgbwAsync(LightBulb bulb, int r, int g, int b, int w = 0, int duration = 0) {
 			if (bulb == null) throw new ArgumentNullException(nameof(bulb));
 			if (duration > uint.MaxValue || duration < 0) throw new ArgumentOutOfRangeException(nameof(duration));
-			Debug.WriteLine("Setting color to {0}", bulb);
 			var dur = (uint) duration;
 			var packet = new LifxPacket(MessageType.LightSetRgbw);
 			packet.ResponseRequired = true;

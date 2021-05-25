@@ -27,6 +27,7 @@ namespace LifxNetPlus {
 				MessageType.DeviceStateHostFirmware => new StateHostFirmwareResponse(packet),
 				MessageType.DeviceStateService => new StateServiceResponse(packet),
 				MessageType.StateExtendedColorZones => new StateExtendedColorZonesResponse(packet),
+				MessageType.SetExtendedColorZones => new SetExtendedColorZonesResponse(packet),
 				MessageType.StateZone => new StateZoneResponse(packet),
 				MessageType.StateMultiZone => new StateMultiZoneResponse(packet),
 				MessageType.StateDeviceChain => new StateDeviceChainResponse(packet),
@@ -320,16 +321,22 @@ namespace LifxNetPlus {
 		/// <summary>
 		/// The list of colors returned by the message
 		/// </summary>
+		[JsonProperty]
 		public LifxColor[] Colors { get; }
 
 		/// <summary>
 		/// Count - total number of zones on the device
 		/// </summary>
+
+		[JsonProperty]
+
 		public ushort Count { get; }
 
 		/// <summary>
 		/// Index - Zone the message starts from
 		/// </summary>
+		[JsonProperty]
+
 		public ushort Index { get; }
 
 		internal StateMultiZoneResponse(LifxPacket packet) : base(
@@ -338,11 +345,8 @@ namespace LifxNetPlus {
 			Count = packet.Payload.GetUint8();
 			Index = packet.Payload.GetUint8();
 			for (var i = 0; i < 8; i++) {
-				Debug.WriteLine($"Reading color {i}.");
 				Colors[i] = packet.Payload.GetColor();
 			}
-
-			Debug.WriteLine("Colors read.");
 		}
 	}
 
@@ -354,25 +358,82 @@ namespace LifxNetPlus {
 		/// <summary>
 		/// The list of colors returned by the message
 		/// </summary>
+		[JsonProperty]
 		public List<LifxColor> Colors { get; private set; }
 
 		/// <summary>
 		/// Count - total number of zones on the device
 		/// </summary>
-		public ushort Count { get; private set; }
+		[JsonProperty]
+		public ushort ZonesCount { get; private set; }
+		
+		/// <summary>
+		/// Number of colors
+		/// </summary>
+		[JsonProperty]
+		public ushort ColorsCount { get; private set; }
 
 		/// <summary>
 		/// Index - Zone the message starts from
 		/// </summary>
+		[JsonProperty]
 		public ushort Index { get; private set; }
 
 		internal StateExtendedColorZonesResponse(LifxPacket packet) :
 			base(packet) {
 			Colors = new List<LifxColor>();
-			Count = packet.Payload.GetUInt16();
+			ZonesCount = packet.Payload.GetUInt16();
 			Index = packet.Payload.GetUInt16();
-			while (packet.Payload.HasContent()) {
-				Colors.Add(packet.Payload.GetColor());
+			ColorsCount = packet.Payload.GetUint8();
+			for (var i = 0; i < ColorsCount; i++) {
+				Colors.Add(packet.Payload.GetColor());	
+			}
+		}
+	}
+	
+	/// <summary>
+	/// Get the list of colors currently being displayed by zones
+	/// </summary>
+	public class SetExtendedColorZonesResponse : LifxResponse {
+		/// <summary>
+		/// The list of colors returned by the message
+		/// </summary>
+		[JsonProperty]
+		public List<LifxColor> Colors { get; private set; }
+		
+		public uint ColorCount { get; set; }
+
+		/// <summary>
+		/// Count - total number of zones on the device
+		/// </summary>
+		[JsonProperty]
+		public ushort ZoneIndex { get; private set; }
+		
+		/// <summary>
+		/// How long to transition to new color
+		/// </summary>
+		[JsonProperty]
+		public uint Duration { get; private set; }
+		
+		/// <summary>
+		/// Should the effect be applied?
+		/// 0 - No
+		/// 1 - Apply
+		/// 2 - ApplyOnly
+		/// </summary>
+		public uint Apply { get; private set; }
+		
+		
+
+		internal SetExtendedColorZonesResponse(LifxPacket packet) :
+			base(packet) {
+			Colors = new List<LifxColor>();
+			Duration = packet.Payload.GetUInt32();
+			Apply = packet.Payload.GetUint8();
+			ZoneIndex = packet.Payload.GetUInt16();
+			ColorCount = packet.Payload.GetUint8();
+			for (var i = 0; i < ColorCount; i++) {
+				Colors.Add(packet.Payload.GetColor());	
 			}
 		}
 	}
@@ -417,8 +478,6 @@ namespace LifxNetPlus {
 			for (var i = 0; i < Colors.Length; i++) {
 				if (packet.Payload.HasContent()) {
 					Colors[i] = packet.Payload.GetColor();
-				} else {
-					Debug.WriteLine($"Content size mismatch fetching colors: {i}/64: ");
 				}
 			}
 		}
@@ -447,8 +506,6 @@ namespace LifxNetPlus {
 			for (var i = 0; i < Colors.Length; i++) {
 				if (packet.Payload.HasContent()) {
 					Colors[i] = packet.Payload.GetColor();
-				} else {
-					Debug.WriteLine($"Content size mismatch fetching colors: {i}/64: ");
 				}
 			}
 		}

@@ -25,7 +25,6 @@ namespace LifxNetPlus {
 		public async Task SetDevicePowerStateAsync(Device device, bool isOn) {
 			if (device == null)
 				throw new ArgumentNullException(nameof(device));
-			Debug.WriteLine($"Sending DeviceSetPower({isOn}) to {device}");
 			var packet = new LifxPacket(MessageType.DeviceSetPower, isOn ? 65535 : 0);
 
 			_ = await BroadcastMessageAsync<AcknowledgementResponse>(device, packet).ConfigureAwait(false);

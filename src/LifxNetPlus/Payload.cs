@@ -4,9 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace LifxNetPlus {
 	/// <summary>
@@ -58,7 +55,7 @@ namespace LifxNetPlus {
 						Add(b);
 						break;
 					case ushort @ushort:
-						Add((byte) @ushort);
+						Add(@ushort);
 						break;
 					case uint u:
 						Add(u);
@@ -90,7 +87,7 @@ namespace LifxNetPlus {
 					case LifxColor c:
 						Add(c);
 						break;
-					case LifxColor[] colors:
+					case IEnumerable<LifxColor> colors:
 						Add(colors);
 						break;
 					case DateTime dt:
@@ -100,7 +97,7 @@ namespace LifxNetPlus {
 						Add(t);
 						break;
 					default:
-						Debug.WriteLine("Unsupported type!" + args.GetType().FullName);
+						//Debug.WriteLine("Unsupported type!" + args.GetType().FullName);
 						throw new NotSupportedException(args.GetType().FullName);
 				}
 			}
@@ -199,13 +196,13 @@ namespace LifxNetPlus {
 		public LifxColor GetColor() {
 			var color = new LifxColor();
 			try {
-				var h = GetUInt16();
-				var s = GetUInt16();
-				var b = GetUInt16();
-				var k = GetUInt16();
+				var h = GetUInt16(false);
+				var s = GetUInt16(false);
+				var b = GetUInt16(false);
+				var k = GetUInt16(false);
 				color = new LifxColor(h, s, b, k);
 			} catch (Exception e) {
-				Debug.WriteLine("Exception: " + e.Message);
+				//Debug.WriteLine("Exception: " + e.Message);
 			}
 
 			Objects.Add(color);
@@ -216,12 +213,11 @@ namespace LifxNetPlus {
 			var date = DateTime.MinValue;
 			try {
 				var stamp = GetUInt64();
-				var longStamp = (long) (unchecked((long)stamp + long.MinValue) * -0.000001);
-				Debug.WriteLine("Stamp: " + longStamp);
-				var epochTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-				date = epochTime + TimeSpan.FromMilliseconds(longStamp);
+				var epoch = stamp / 1000;
+				date = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)
+						.AddSeconds(epoch); 
 			} catch (Exception e) {
-				Debug.WriteLine("Exception: " + e.Message);
+				//Debug.WriteLine("Exception: " + e.Message);
 			}
 			Objects.Add(date);
 			return date;
@@ -247,7 +243,7 @@ namespace LifxNetPlus {
 			try {
 				num = _br.ReadByte();
 			} catch {
-				Debug.WriteLine("Error reading byte, pos is " + _ms.Position);
+				//Debug.WriteLine("Error reading byte, pos is " + _ms.Position);
 			}
 
 			Objects.Add(num);
@@ -258,15 +254,15 @@ namespace LifxNetPlus {
 		/// Read UInt16 from array and increment pointer 2 bytes
 		/// </summary>
 		/// <returns>ushort</returns>
-		public ushort GetUInt16() {
+		public ushort GetUInt16(bool addToData=true) {
 			ushort num = 0;
 			try {
 				num = _br.ReadUInt16();
 			} catch {
-				Debug.WriteLine($"Error getting Uint16 from payload, pointer {_ms.Position} of range: " + _len);
+				//Debug.WriteLine($"Error getting Uint16 from payload, pointer {_ms.Position} of range: " + _len);
 			}
 
-			Objects.Add(num);
+			if(addToData) Objects.Add(num);
 			return num;
 		}
 
@@ -279,7 +275,7 @@ namespace LifxNetPlus {
 			try {
 				num = _br.ReadInt16();
 			} catch {
-				Debug.WriteLine($"Error getting int16 from payload, pointer {_ms.Position} of range: " + _len);
+				//Debug.WriteLine($"Error getting int16 from payload, pointer {_ms.Position} of range: " + _len);
 			}
 		
 			Objects.Add(num);
@@ -295,7 +291,7 @@ namespace LifxNetPlus {
 			try {
 				num = _br.ReadInt32();
 			} catch {
-				Debug.WriteLine($"Error getting Int32 from payload, pointer {_ms.Position} of range: " + _len);
+				//Debug.WriteLine($"Error getting Int32 from payload, pointer {_ms.Position} of range: " + _len);
 			}
 
 			Objects.Add(num);
@@ -311,7 +307,7 @@ namespace LifxNetPlus {
 			try {
 				num = _br.ReadUInt32();
 			} catch {
-				Debug.WriteLine($"Error getting Uint32 from payload, pointer {_ms.Position} of range: " + _len);
+				//Debug.WriteLine($"Error getting Uint32 from payload, pointer {_ms.Position} of range: " + _len);
 			}
 
 			Objects.Add(num);
@@ -327,7 +323,7 @@ namespace LifxNetPlus {
 			try {
 				num = _br.ReadInt64();
 			} catch {
-				Debug.WriteLine($"Error getting Int64 from payload, pointer {_ms.Position} of range: " + _len);
+				//Debug.WriteLine($"Error getting Int64 from payload, pointer {_ms.Position} of range: " + _len);
 			}
 
 			Objects.Add(num);
@@ -343,7 +339,7 @@ namespace LifxNetPlus {
 			try {
 				num = _br.ReadUInt64();
 			} catch {
-				Debug.WriteLine($"Error getting Uint64 from payload, pointer {_ms.Position} of range: " + _len);
+				//Debug.WriteLine($"Error getting Uint64 from payload, pointer {_ms.Position} of range: " + _len);
 			}
 
 			Objects.Add(num);
@@ -359,7 +355,7 @@ namespace LifxNetPlus {
 			try {
 				num = _br.ReadSingle();
 			} catch {
-				Debug.WriteLine($"Error getting Float32 from payload, pointer {_ms.Position} of range: " + _len);
+				//Debug.WriteLine($"Error getting Float32 from payload, pointer {_ms.Position} of range: " + _len);
 			}
 			Objects.Add(num);
 			return num;
@@ -383,7 +379,7 @@ namespace LifxNetPlus {
 				output = (string) output.Replace("\0",string.Empty).ToString();
 
 			} catch {
-				Debug.WriteLine($"Error getting string, pointer {_ms.Position} out of range: " + _len);
+				//Debug.WriteLine($"Error getting string, pointer {_ms.Position} out of range: " + _len);
 			}
 			Objects.Add(output);
 			return output;
@@ -446,7 +442,7 @@ namespace LifxNetPlus {
 			_data.AddRange(input.ToBytes());
 		}
 
-		private void Add(LifxColor[] input) {
+		private void Add(IEnumerable<LifxColor> input) {
 			foreach (var lc in input) {
 				Add(lc);
 			}
@@ -454,7 +450,8 @@ namespace LifxNetPlus {
 
 		private void Add(DateTime input) {
 			var epoch = new DateTime(1970, 1, 1);
-			Add(Convert.ToInt64((input - epoch).TotalMilliseconds) * 1000000);
+			var updated = input - epoch;
+			Add(updated.TotalMilliseconds * 1000);
 		}
 
 		private void Add(Tile input) {

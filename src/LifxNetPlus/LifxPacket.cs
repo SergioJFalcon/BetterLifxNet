@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
 
 namespace LifxNetPlus {
 	[Serializable]
@@ -25,11 +26,12 @@ namespace LifxNetPlus {
 		
 		public Payload Payload { get; set; }
 		
-		public uint Identifier { get; set; }
 		public uint Source { get; set; }
 		public const ushort Protocol = 1024;
 
 		public LifxPacket() {
+			Source = MessageId.GetSource();
+			Sequence = MessageId.GetNextSequence();
 		}
 
 		public LifxPacket(byte[] data) {
@@ -51,7 +53,6 @@ namespace LifxNetPlus {
 			AtTime = Utilities.Epoch.AddMilliseconds(nanoseconds * 0.000001);
 			Type = (MessageType) reader.ReadUInt16();
 			reader.ReadUInt16(); // Reserved!
-			Identifier = Source;
 			Payload = new Payload();
 			var len = ms.Capacity - ms.Position;
 			if (len > 0) {
@@ -65,7 +66,6 @@ namespace LifxNetPlus {
 			Tagged = lifxPacket.Tagged;
 			Origin = lifxPacket.Origin;
 			Source = lifxPacket.Source;
-			Identifier = Source;
 			Target = lifxPacket.Target;
 			ResponseRequired = lifxPacket.ResponseRequired;
 			AcknowledgeRequired = lifxPacket.AcknowledgeRequired;
@@ -73,29 +73,17 @@ namespace LifxNetPlus {
 			Type = lifxPacket.Type;
 			AtTime = lifxPacket.AtTime;
 			Payload = lifxPacket.Payload;
+			if (Size == 0) Size = (ushort) (Payload.ToArray().Length + 36);
 		}
 
-		public LifxPacket(uint id, MessageType type, params object[] args) {
-			Identifier = MessageId.GetNextIdentifier();
-			Source = Identifier;
-			Type = type;
-			if (type == MessageType.DeviceGetService) {
-				Tagged = true;
-				AtTime = DateTime.MinValue;
-				Identifier = id;
-				Source = id;
-			}
-
-			Target = new byte[] {0, 0, 0, 0, 0, 0, 0, 0};
-			Payload = new Payload(args);
-		}
-
+		
 		public LifxPacket(MessageType type, params object[] args) {
-			Identifier = MessageId.GetNextIdentifier();
-			Source = Identifier;
+			Source = MessageId.GetSource();
+			Sequence = MessageId.GetNextSequence();
 			Type = type;
 			Target = new byte[] {0, 0, 0, 0, 0, 0, 0, 0};
 			Payload = new Payload(args);
+			Size = (ushort) (Payload.ToArray().Length + 36);
 		}
 
 
@@ -104,16 +92,22 @@ namespace LifxNetPlus {
 		/// </summary>
 		/// <returns></returns>
 		public byte[] Encode() {
-			Size = (ushort) (Payload.Length + 36);
 			Addressable = true;
+			// Frame header
+			Size = (ushort) (Payload.ToArray().Length + 36);
 			var bytes = new List<byte>();
 			bytes.AddRange(BitConverter.GetBytes(Size));
 			var proto = BitConverter.GetBytes((ushort) 1024);
-			proto = SetBit(proto, 12, Addressable);
-			proto = SetBit(proto, 13, Tagged);
-			proto = SetBit(proto, 14, Origin == 1);
-			bytes.AddRange(proto);
+			var proto2 = proto;
+			proto2 = SetBit(proto2, 12, Addressable);
+			proto2 = SetBit(proto2, 13, Tagged);
+			proto2 = SetBit(proto2, 14, Origin == 1);
+			
+			bytes.AddRange(proto2);
 			bytes.AddRange(BitConverter.GetBytes(Source));
+			
+			// Frame address
+			
 			// Pad target address if only 6 bytes
 			var tList = Target.ToList();
 			if (Target.Length == 6) {
@@ -121,18 +115,21 @@ namespace LifxNetPlus {
 			}
 
 			bytes.AddRange(tList);
-			bytes.AddRange(new byte[] {0, 0, 0, 0, 0, 0}); // Reserved
-			var resByte = (byte) 0;
+			bytes.AddRange(new byte[] {0, 0, 0, 0, 0, 0}); // Reserved 1
+			var resByte = (byte) 0; // Reserved 2
 			resByte = SetBit(resByte, 0, ResponseRequired);
 			resByte = SetBit(resByte, 1, AcknowledgeRequired);
 			bytes.Add(resByte);
 			bytes.Add(Sequence);
 			AtTime = DateTime.Now;
 			var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-			var tLong = Convert.ToInt64((AtTime - epoch).TotalSeconds);
-			bytes.AddRange(BitConverter.GetBytes(tLong));
+			//var tLong = Convert.ToInt64((AtTime - epoch).TotalSeconds);
+			//bytes.AddRange(BitConverter.GetBytes(tLong));
+			bytes.AddRange(new byte[] {0, 0, 0, 0, 0, 0, 0, 0}); // Reserved 2
+
 			bytes.AddRange(BitConverter.GetBytes((ushort) Type));
-			bytes.AddRange(new byte[] {0, 0}); // Reserved
+			bytes.AddRange(new byte[] {0, 0}); // Reserved 3
+
 			bytes.AddRange(Payload.ToArray());
 			return bytes.ToArray();
 		}

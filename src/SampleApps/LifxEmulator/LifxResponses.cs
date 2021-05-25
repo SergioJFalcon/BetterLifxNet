@@ -454,7 +454,7 @@ namespace LifxEmulator {
 	public class StateLocationResponse : LifxResponse {
 		public byte[] Location { get; set; }
 
-		public ulong Updated { get; set; }
+		public DateTime Updated { get; set; }
 
 		public string Label { get; set; }
 
@@ -473,7 +473,7 @@ namespace LifxEmulator {
 	public class StateGroupResponse : LifxResponse {
 		public byte[] Group { get; set; }
 
-		public ulong Updated { get; set; }
+		public DateTime Updated { get; set; }
 
 		public string Label { get; set; }
 

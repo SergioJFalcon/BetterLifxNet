@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace LifxNetPlus {
 	public partial class LifxClient : IDisposable {
@@ -37,36 +39,45 @@ namespace LifxNetPlus {
 		/// Set a zone of colors
 		/// </summary>
 		/// <param name="device">The device to set</param>
+		/// <param name="colors">An array of system.drawing.colors. For completeness, I should probably make an
+		///     overload for this that accepts HSB values, but that's kind of a pain. :P</param>
 		/// <param name="transitionDuration">Duration in ms</param>
 		/// <param name="index">Start index of the zone. Should probably just be 0 for most cases.</param>
-		/// <param name="colors">An array of system.drawing.colors. For completeness, I should probably make an
-		/// overload for this that accepts HSB values, but that's kind of a pain. :P</param>
 		/// <param name="apply">Whether to apply the effect or immediately or not. defaults to false.</param>
 		/// <returns></returns>
 		/// <exception cref="ArgumentNullException">Thrown if the device is null</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Thrown if the duration is longer than the max</exception>
 		/// 
-		public async Task SetExtendedColorZonesAsync(Device device, TimeSpan transitionDuration, uint index,
-			List<LifxColor> colors, bool apply = false) {
+		public async Task SetExtendedColorZonesAsync(Device device, List<LifxColor> colors,
+			uint transitionDuration = 0, ushort index = 0, bool apply = true) {
 			if (device == null)
 				throw new ArgumentNullException(nameof(device));
-			if (transitionDuration.TotalMilliseconds > uint.MaxValue ||
-			    transitionDuration.Ticks < 0) {
-				throw new ArgumentOutOfRangeException(nameof(transitionDuration));
-			}
-
-			var duration = (uint) transitionDuration.TotalMilliseconds;
+			
 			var count = (byte) colors.Count;
-			var colorBytes = new List<byte>();
-			foreach (var color in colors) {
-				colorBytes.AddRange(color.ToBytes());
-			}
-
-			var doApply = apply ? 0x01 : 0x00;
-			var packet = new LifxPacket(MessageType.SetExtendedColorZones) {
-				Payload = new Payload(new object[] {duration, doApply, index, count, colorBytes})
+			var doApply = apply ? (byte)0x01 : (byte)0x00;
+			var args = new List<object> {
+				transitionDuration, // Uint32
+				doApply, // Uint8
+				index, // Uint16
+				count
 			};
-			await BroadcastMessageAsync<AcknowledgementResponse>(device, packet);
+			for (var i = 0; i < 82; i++) {
+				if (colors.Count > i) {
+					args.Add(colors[i]);
+				} else {
+					args.Add(new LifxColor());
+				}
+			}
+			
+			var packet = new LifxPacket(MessageType.SetExtendedColorZones) {
+				Payload = new Payload(args.ToArray())
+			};
+			packet.AcknowledgeRequired = false;
+			packet.Addressable = true;
+			packet.ResponseRequired = false;
+			packet.Tagged = false;
+			packet.Target = device.MacAddress;
+			BroadcastMessageAsync(device, packet).ConfigureAwait(false);
 		}
 
 		/// <summary>

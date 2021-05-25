@@ -5,7 +5,7 @@
     <RootNamespace>LifxNetPlus</RootNamespace>
     <AssemblyName>LifxNetPlus</AssemblyName>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <Company>Morten Nielsen</Company>
+    <Company>Digitalhigh</Company>
     <Version>2.2.0</Version>
     <Authors>Digitalhigh, Morten Nielsen</Authors>
     <Description>Library for controlling LIFX light bulbs</Description>
@@ -19,11 +19,13 @@
     <RepositoryType>git</RepositoryType>
     <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
-    <PackageVersion>1.1.0</PackageVersion>
+    <PackageVersion>1.1.1</PackageVersion>
     <PackageReleaseNotes>Add initial support for Multizone</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Colorspace" Version="1.0.2" />
+    <PackageReference Include="Colourful" Version="2.0.5" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1-beta1" />
   </ItemGroup>
