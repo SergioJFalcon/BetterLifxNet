@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Threading;
@@ -9,7 +8,7 @@ using System.Threading.Tasks;
 namespace LifxNetPlus {
 	public partial class LifxClient {
 		/// <summary>
-		/// Gets a list of currently known devices
+		///     Gets a list of currently known devices
 		/// </summary>
 		public IEnumerable<Device> Devices => devices;
 
@@ -24,18 +23,18 @@ namespace LifxNetPlus {
 
 
 		/// <summary>
-		/// Event fired when a LIFX bulb is discovered on the network
+		///     Event fired when a LIFX bulb is discovered on the network
 		/// </summary>
 		public event EventHandler<DeviceDiscoveryEventArgs>? DeviceDiscovered;
 
 		/// <summary>
-		/// Event fired when a LIFX bulb hasn't been seen on the network for a while (for more than 5 minutes)
+		///     Event fired when a LIFX bulb hasn't been seen on the network for a while (for more than 5 minutes)
 		/// </summary>
 		public event EventHandler<DeviceDiscoveryEventArgs>? DeviceLost;
 
 		private void ProcessDeviceDiscoveryMessage(IPAddress remoteAddress, StateServiceResponse msg) {
 			string id = msg.TargetMacAddressName;
-			
+
 			if (_discoveredBulbs.ContainsKey(id)) {
 				_discoveredBulbs[id].LastSeen = DateTime.UtcNow; //Update datestamp
 				_discoveredBulbs[id].HostName = remoteAddress.ToString(); //Update hostname in case IP changed
@@ -64,16 +63,18 @@ namespace LifxNetPlus {
 		}
 
 		/// <summary>
-		/// Begins searching for bulbs.
+		///     Begins searching for bulbs.
 		/// </summary>
-		/// <seealso cref="DeviceDiscovered"/>
-		/// <seealso cref="DeviceLost"/>
-		/// <seealso cref="StopDeviceDiscovery"/>
+		/// <seealso cref="DeviceDiscovered" />
+		/// <seealso cref="DeviceLost" />
+		/// <seealso cref="StopDeviceDiscovery" />
 		public void StartDeviceDiscovery() {
 			// Reset our list of devices on discovery start
 			devices = new List<Device>();
-			if (_discoverCancellationSource != null && !_discoverCancellationSource.IsCancellationRequested)
+			if (_discoverCancellationSource != null && !_discoverCancellationSource.IsCancellationRequested) {
 				return;
+			}
+
 			_discoverCancellationSource = new CancellationTokenSource();
 			var token = _discoverCancellationSource.Token;
 			var discoPacket = new LifxPacket(MessageType.DeviceGetService);
@@ -104,26 +105,30 @@ namespace LifxNetPlus {
 		}
 
 		/// <summary>
-		/// Stops device discovery
+		///     Stops device discovery
 		/// </summary>
-		/// <seealso cref="StartDeviceDiscovery"/>
+		/// <seealso cref="StartDeviceDiscovery" />
 		public void StopDeviceDiscovery() {
-			if (_discoverCancellationSource == null || _discoverCancellationSource.IsCancellationRequested)
+			if (_discoverCancellationSource == null || _discoverCancellationSource.IsCancellationRequested) {
 				return;
+			}
+
 			_discoverCancellationSource.Cancel();
 			_discoverCancellationSource = null;
 		}
 
 		/// <summary>
-		/// Event args for <see cref="LifxClient.DeviceDiscovered"/> and <see cref="LifxClient.DeviceLost"/> events.
+		///     Event args for <see cref="LifxClient.DeviceDiscovered" /> and <see cref="LifxClient.DeviceLost" /> events.
 		/// </summary>
 		public sealed class DeviceDiscoveryEventArgs : EventArgs {
 			/// <summary>
-			/// The device the event relates to
+			///     The device the event relates to
 			/// </summary>
 			public Device Device { get; }
 
-			internal DeviceDiscoveryEventArgs(Device device) => Device = device;
+			internal DeviceDiscoveryEventArgs(Device device) {
+				Device = device;
+			}
 		}
 	}
 }

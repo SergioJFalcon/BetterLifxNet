@@ -1,6 +1,6 @@
 ﻿namespace LifxNetPlus {
 	/// <summary>
-	/// The message type used for LAN communication
+	///     The message type used for LAN communication
 	/// </summary>
 	public enum MessageType : ushort {
 		//Device Messages

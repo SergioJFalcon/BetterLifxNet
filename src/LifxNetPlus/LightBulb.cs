@@ -1,10 +1,11 @@
 ﻿namespace LifxNetPlus {
 	/// <summary>
-	/// LIFX light bulb
+	///     LIFX light bulb
 	/// </summary>
 	public sealed class LightBulb : Device {
 		/// <summary>
-		/// Initializes a new instance of a bulb instead of relying on discovery. At least the host name must be provide for the device to be usable.
+		///     Initializes a new instance of a bulb instead of relying on discovery. At least the host name must be provide for
+		///     the device to be usable.
 		/// </summary>
 		/// <param name="hostname">Required</param>
 		/// <param name="macAddress"></param>

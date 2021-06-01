@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using Newtonsoft.Json;
 
 namespace LifxNetPlus {
 	/// <summary>
-	/// Base class for LIFX response types
+	///     Base class for LIFX response types
 	/// </summary>
 	public abstract class LifxResponse : LifxPacket {
 		internal LifxPacket Packet { get; }
@@ -52,7 +50,7 @@ namespace LifxNetPlus {
 	}
 
 	/// <summary>
-	/// Response to any message sent with ack_required set to 1. 
+	///     Response to any message sent with ack_required set to 1.
 	/// </summary>
 	internal class AcknowledgementResponse : LifxResponse {
 		internal AcknowledgementResponse(LifxPacket packet) : base(
@@ -61,7 +59,7 @@ namespace LifxNetPlus {
 	}
 
 	/// <summary>
-	/// State Tile Tap Config
+	///     State Tile Tap Config
 	/// </summary>
 	internal class StateTileTapConfigResponse : LifxResponse {
 		internal StateTileTapConfigResponse(LifxPacket packet) : base(
@@ -70,7 +68,7 @@ namespace LifxNetPlus {
 	}
 
 	/// <summary>
-	/// Response to a state tile get request 
+	///     Response to a state tile get request
 	/// </summary>
 	public class StateTileEffectResponse : LifxResponse {
 		internal StateTileEffectResponse(LifxPacket packet) : base(
@@ -79,21 +77,22 @@ namespace LifxNetPlus {
 	}
 
 	/// <summary>
-	/// The StateZone message represents the state of a single zone with the index field indicating which zone is represented. The count field contains the count of the total number of zones available on the device.
+	///     The StateZone message represents the state of a single zone with the index field indicating which zone is
+	///     represented. The count field contains the count of the total number of zones available on the device.
 	/// </summary>
 	public class StateZoneResponse : LifxResponse {
 		/// <summary>
-		/// The list of colors returned by the message
+		///     The list of colors returned by the message
 		/// </summary>
 		public LifxColor Color { get; }
 
 		/// <summary>
-		/// Count - total number of zones on the device
+		///     Count - total number of zones on the device
 		/// </summary>
 		public ushort Count { get; }
 
 		/// <summary>
-		/// Index - Zone the message starts from
+		///     Index - Zone the message starts from
 		/// </summary>
 		public ushort Index { get; }
 
@@ -106,22 +105,22 @@ namespace LifxNetPlus {
 
 
 	/// <summary>
-	/// Response to GetHostInfo message.
-	/// Provides host MCU information.
+	///     Response to GetHostInfo message.
+	///     Provides host MCU information.
 	/// </summary>
 	public class StateHostInfoResponse : LifxResponse {
 		/// <summary>
-		/// Radio receive signal strength in milliWatts
+		///     Radio receive signal strength in milliWatts
 		/// </summary>
 		public float Signal { get; set; }
 
 		/// <summary>
-		/// Bytes received since power on
+		///     Bytes received since power on
 		/// </summary>
 		public uint Rx { get; set; }
 
 		/// <summary>
-		/// Bytes transmitted since power on
+		///     Bytes transmitted since power on
 		/// </summary>
 		public uint Tx { get; set; }
 
@@ -134,22 +133,22 @@ namespace LifxNetPlus {
 
 
 	/// <summary>
-	/// Response to GetWifiInfo message.
-	/// Provides host Wifi information.
+	///     Response to GetWifiInfo message.
+	///     Provides host Wifi information.
 	/// </summary>
 	public class StateWifiInfoResponse : LifxResponse {
 		/// <summary>
-		/// Radio receive signal strength in milliWatts
+		///     Radio receive signal strength in milliWatts
 		/// </summary>
 		public float Signal { get; set; }
 
 		/// <summary>
-		/// Bytes received since power on
+		///     Bytes received since power on
 		/// </summary>
 		public uint Rx { get; set; }
 
 		/// <summary>
-		/// Bytes transmitted since power on
+		///     Bytes transmitted since power on
 		/// </summary>
 		public uint Tx { get; set; }
 
@@ -161,22 +160,22 @@ namespace LifxNetPlus {
 	}
 
 	/// <summary>
-	/// Response to GetWifiFirmware message.
-	/// Provides Wifi subsystem information.
+	///     Response to GetWifiFirmware message.
+	///     Provides Wifi subsystem information.
 	/// </summary>
 	public class StateWifiFirmwareResponse : LifxResponse {
 		/// <summary>
-		/// Firmware build time (epoch time)
+		///     Firmware build time (epoch time)
 		/// </summary>
 		public ulong Build { get; set; }
 
 		/// <summary>
-		/// Major firmware version number
+		///     Major firmware version number
 		/// </summary>
 		public ushort VersionMajor { get; set; }
 
 		/// <summary>
-		/// Minor firmware version number
+		///     Minor firmware version number
 		/// </summary>
 		public ushort VersionMinor { get; set; }
 
@@ -191,11 +190,11 @@ namespace LifxNetPlus {
 
 
 	/// <summary>
-	/// Provides device power level.
+	///     Provides device power level.
 	/// </summary>
 	public class StatePowerResponse : LifxResponse {
 		/// <summary>
-		/// Zero implies standby and non-zero sets a corresponding power draw level. Currently only 0 and 65535 are supported.
+		///     Zero implies standby and non-zero sets a corresponding power draw level. Currently only 0 and 65535 are supported.
 		/// </summary>
 		public ulong Level { get; set; }
 
@@ -206,21 +205,21 @@ namespace LifxNetPlus {
 
 
 	/// <summary>
-	/// Provides run-time information of device.
+	///     Provides run-time information of device.
 	/// </summary>
 	public class StateInfoResponse : LifxResponse {
 		/// <summary>
-		/// Current time
+		///     Current time
 		/// </summary>
 		public DateTime Time { get; set; }
 
 		/// <summary>
-		/// Last power off period, 5 second accuracy (in nanoseconds)
+		///     Last power off period, 5 second accuracy (in nanoseconds)
 		/// </summary>
 		public long Downtime { get; set; }
 
 		/// <summary>
-		/// Time since last power on (relative time in nanoseconds)
+		///     Time since last power on (relative time in nanoseconds)
 		/// </summary>
 		public long Uptime { get; set; }
 
@@ -233,7 +232,7 @@ namespace LifxNetPlus {
 
 
 	/// <summary>
-	/// Device location.
+	///     Device location.
 	/// </summary>
 	public class StateLocationResponse : LifxResponse {
 		public byte[] Location { get; set; }
@@ -250,7 +249,7 @@ namespace LifxNetPlus {
 	}
 
 	/// <summary>
-	/// Device group.
+	///     Device group.
 	/// </summary>
 	public class StateGroupResponse : LifxResponse {
 		public byte[] Group { get; set; }
@@ -267,11 +266,11 @@ namespace LifxNetPlus {
 	}
 
 	/// <summary>
-	/// Echo response with payload sent in the EchoRequest.
+	///     Echo response with payload sent in the EchoRequest.
 	/// </summary>
 	public class EchoResponse : LifxResponse {
 		/// <summary>
-		/// Payload sent in the EchoRequest.
+		///     Payload sent in the EchoRequest.
 		/// </summary>
 		public byte[] RequestPayload { get; set; }
 
@@ -282,21 +281,22 @@ namespace LifxNetPlus {
 
 
 	/// <summary>
-	/// The StateZone message represents the state of a single zone with the index field indicating which zone is represented. The count field contains the count of the total number of zones available on the device.
+	///     The StateZone message represents the state of a single zone with the index field indicating which zone is
+	///     represented. The count field contains the count of the total number of zones available on the device.
 	/// </summary>
 	public class StateDeviceChainResponse : LifxResponse {
 		/// <summary>
-		/// Start Index - Zone the message starts from
+		///     Start Index - Zone the message starts from
 		/// </summary>
 		public byte StartIndex { get; }
 
 		/// <summary>
-		/// Count - total number of zones on the device
+		///     Count - total number of zones on the device
 		/// </summary>
 		public int TotalCount { get; }
 
 		/// <summary>
-		/// The list of colors returned by the message
+		///     The list of colors returned by the message
 		/// </summary>
 		public List<Tile> Tiles { get; }
 
@@ -315,28 +315,26 @@ namespace LifxNetPlus {
 	}
 
 	/// <summary>
-	/// Get the list of colors currently being displayed by zones
+	///     Get the list of colors currently being displayed by zones
 	/// </summary>
 	public class StateMultiZoneResponse : LifxResponse {
 		/// <summary>
-		/// The list of colors returned by the message
+		///     The list of colors returned by the message
 		/// </summary>
 		[JsonProperty]
 		public LifxColor[] Colors { get; }
 
 		/// <summary>
-		/// Count - total number of zones on the device
+		///     Count - total number of zones on the device
 		/// </summary>
 
 		[JsonProperty]
-
 		public ushort Count { get; }
 
 		/// <summary>
-		/// Index - Zone the message starts from
+		///     Index - Zone the message starts from
 		/// </summary>
 		[JsonProperty]
-
 		public ushort Index { get; }
 
 		internal StateMultiZoneResponse(LifxPacket packet) : base(
@@ -352,32 +350,32 @@ namespace LifxNetPlus {
 
 
 	/// <summary>
-	/// Get the list of colors currently being displayed by zones
+	///     Get the list of colors currently being displayed by zones
 	/// </summary>
 	public class StateExtendedColorZonesResponse : LifxResponse {
 		/// <summary>
-		/// The list of colors returned by the message
+		///     The list of colors returned by the message
 		/// </summary>
 		[JsonProperty]
 		public List<LifxColor> Colors { get; private set; }
 
 		/// <summary>
-		/// Count - total number of zones on the device
-		/// </summary>
-		[JsonProperty]
-		public ushort ZonesCount { get; private set; }
-		
-		/// <summary>
-		/// Number of colors
+		///     Number of colors
 		/// </summary>
 		[JsonProperty]
 		public ushort ColorsCount { get; private set; }
 
 		/// <summary>
-		/// Index - Zone the message starts from
+		///     Index - Zone the message starts from
 		/// </summary>
 		[JsonProperty]
 		public ushort Index { get; private set; }
+
+		/// <summary>
+		///     Count - total number of zones on the device
+		/// </summary>
+		[JsonProperty]
+		public ushort ZonesCount { get; private set; }
 
 		internal StateExtendedColorZonesResponse(LifxPacket packet) :
 			base(packet) {
@@ -386,44 +384,43 @@ namespace LifxNetPlus {
 			Index = packet.Payload.GetUInt16();
 			ColorsCount = packet.Payload.GetUint8();
 			for (var i = 0; i < ColorsCount; i++) {
-				Colors.Add(packet.Payload.GetColor());	
+				Colors.Add(packet.Payload.GetColor());
 			}
 		}
 	}
-	
+
 	/// <summary>
-	/// Get the list of colors currently being displayed by zones
+	///     Get the list of colors currently being displayed by zones
 	/// </summary>
 	public class SetExtendedColorZonesResponse : LifxResponse {
 		/// <summary>
-		/// The list of colors returned by the message
+		///     The list of colors returned by the message
 		/// </summary>
 		[JsonProperty]
 		public List<LifxColor> Colors { get; private set; }
-		
+
+		/// <summary>
+		///     Should the effect be applied?
+		///     0 - No
+		///     1 - Apply
+		///     2 - ApplyOnly
+		/// </summary>
+		public uint Apply { get; }
+
 		public uint ColorCount { get; set; }
 
 		/// <summary>
-		/// Count - total number of zones on the device
-		/// </summary>
-		[JsonProperty]
-		public ushort ZoneIndex { get; private set; }
-		
-		/// <summary>
-		/// How long to transition to new color
+		///     How long to transition to new color
 		/// </summary>
 		[JsonProperty]
 		public uint Duration { get; private set; }
-		
+
 		/// <summary>
-		/// Should the effect be applied?
-		/// 0 - No
-		/// 1 - Apply
-		/// 2 - ApplyOnly
+		///     Count - total number of zones on the device
 		/// </summary>
-		public uint Apply { get; private set; }
-		
-		
+		[JsonProperty]
+		public ushort ZoneIndex { get; private set; }
+
 
 		internal SetExtendedColorZonesResponse(LifxPacket packet) :
 			base(packet) {
@@ -433,15 +430,15 @@ namespace LifxNetPlus {
 			ZoneIndex = packet.Payload.GetUInt16();
 			ColorCount = packet.Payload.GetUint8();
 			for (var i = 0; i < ColorCount; i++) {
-				Colors.Add(packet.Payload.GetColor());	
+				Colors.Add(packet.Payload.GetColor());
 			}
 		}
 	}
 
 	/// <summary>
-	/// Response to GetService message.
-	/// Provides the device Service and port.
-	/// If the Service is temporarily unavailable, then the port value will be 0.
+	///     Response to GetService message.
+	///     Provides the device Service and port.
+	///     If the Service is temporarily unavailable, then the port value will be 0.
 	/// </summary>
 	[Serializable]
 	public class StateServiceResponse : LifxResponse {
@@ -456,7 +453,7 @@ namespace LifxNetPlus {
 	}
 
 	/// <summary>
-	/// Response to any message sent with ack_required set to 1. 
+	///     Response to any message sent with ack_required set to 1.
 	/// </summary>
 	public class StateTileState16Response : LifxResponse {
 		public LifxColor[] Colors { get; }
@@ -482,9 +479,9 @@ namespace LifxNetPlus {
 			}
 		}
 	}
-	
+
 	/// <summary>
-	/// Response to any message sent with ack_required set to 1. 
+	///     Response to any message sent with ack_required set to 1.
 	/// </summary>
 	public class StateTileState64Response : LifxResponse {
 		public LifxColor[] Colors { get; }
@@ -512,7 +509,7 @@ namespace LifxNetPlus {
 	}
 
 	/// <summary>
-	/// Response to GetLabel message. Provides device label.
+	///     Response to GetLabel message. Provides device label.
 	/// </summary>
 	internal class StateLabelResponse : LifxResponse {
 		public string? Label { get; }
@@ -523,7 +520,7 @@ namespace LifxNetPlus {
 	}
 
 	/// <summary>
-	/// Response to GetLabel message. Provides device label.
+	///     Response to GetLabel message. Provides device label.
 	/// </summary>
 	public class StateOwnerResponse : LifxResponse {
 		public string Label { get; }
@@ -723,36 +720,36 @@ namespace LifxNetPlus {
 	}
 
 	/// <summary>
-	/// Sent by a device to provide the current light state
+	///     Sent by a device to provide the current light state
 	/// </summary>
 	public class LightStateResponse : LifxResponse {
 		/// <summary>
-		/// Power state
+		///     Power state
 		/// </summary>
 		public bool IsOn { get; }
 
 		/// <summary>
-		/// Light label
+		///     Light label
 		/// </summary>
 		public string Label { get; }
 
 		/// <summary>
-		/// Brightness (0=off, 65535=full brightness)
+		///     Brightness (0=off, 65535=full brightness)
 		/// </summary>
 		public ushort Brightness { get; }
 
 		/// <summary>
-		/// Hue
+		///     Hue
 		/// </summary>
 		public ushort Hue { get; }
 
 		/// <summary>
-		/// Bulb color temperature
+		///     Bulb color temperature
 		/// </summary>
 		public ushort Kelvin { get; }
 
 		/// <summary>
-		/// Saturation (0=desaturated, 65535 = fully saturated)
+		///     Saturation (0=desaturated, 65535 = fully saturated)
 		/// </summary>
 		public ushort Saturation { get; }
 
@@ -786,21 +783,21 @@ namespace LifxNetPlus {
 	}
 
 	/// <summary>
-	/// Response to GetVersion message.	Provides the hardware version of the device.
+	///     Response to GetVersion message.	Provides the hardware version of the device.
 	/// </summary>
 	public class StateVersionResponse : LifxResponse {
 		/// <summary>
-		/// Product ID
+		///     Product ID
 		/// </summary>
 		public uint Product { get; }
 
 		/// <summary>
-		/// Vendor ID
+		///     Vendor ID
 		/// </summary>
 		public uint Vendor { get; }
 
 		/// <summary>
-		/// Hardware version
+		///     Hardware version
 		/// </summary>
 		public uint Version { get; }
 
@@ -813,16 +810,16 @@ namespace LifxNetPlus {
 	}
 
 	/// <summary>
-	/// Response to GetHostFirmware message. Provides host firmware information.
+	///     Response to GetHostFirmware message. Provides host firmware information.
 	/// </summary>
 	public class StateHostFirmwareResponse : LifxResponse {
 		/// <summary>
-		/// Firmware build time
+		///     Firmware build time
 		/// </summary>
 		public DateTime Build { get; }
 
 		/// <summary>
-		/// Firmware version
+		///     Firmware version
 		/// </summary>
 		public uint Version { get; }
 
@@ -836,16 +833,16 @@ namespace LifxNetPlus {
 	}
 
 	/// <summary>
-	/// Response to GetVersion message.	Provides the hardware version of the device.
+	///     Response to GetVersion message.	Provides the hardware version of the device.
 	/// </summary>
 	public class StateRelayPowerResponse : LifxResponse {
 		/// <summary>
-		/// The value of the relay
+		///     The value of the relay
 		/// </summary>
 		public int Level { get; }
 
 		/// <summary>
-		/// The relay on the switch starting from 0
+		///     The relay on the switch starting from 0
 		/// </summary>
 		public int RelayIndex { get; }
 

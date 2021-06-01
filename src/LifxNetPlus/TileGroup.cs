@@ -2,25 +2,68 @@
 using System.Collections.Generic;
 
 namespace LifxNetPlus {
+	/// <summary>
+	/// Class representation of a Tile Response
+	/// </summary>
 	[Serializable]
 	public class Tile {
+		/// <summary>
+		/// Height
+		/// </summary>
 		public byte Height { get; set; }
+		/// <summary>
+		/// Width
+		/// </summary>
 		public byte Width { get; set; }
+		/// <summary>
+		/// X position
+		/// </summary>
 		public float UserX { get; set; }
+		/// <summary>
+		/// Y position
+		/// </summary>
 		public float UserY { get; set; }
+		/// <summary>
+		/// X rotation
+		/// </summary>
 		public short AccelMeasX { get; set; }
+		/// <summary>
+		/// Y rotation
+		/// </summary>
 		public short AccelMeasY { get; set; }
+		/// <summary>
+		/// Z rotition
+		/// </summary>
 		public short AccelMeasZ { get; set; }
+		/// <summary>
+		/// Product Version
+		/// </summary>
 		public uint DeviceVersionProduct { get; set; }
+		/// <summary>
+		/// Vendor
+		/// </summary>
 		public uint DeviceVersionVendor { get; set; }
+		/// <summary>
+		/// Device Version
+		/// </summary>
 		public uint DeviceVersionVersion { get; set; }
+		/// <summary>
+		/// Firmware build number
+		/// </summary>
 		public ulong FirmwareBuild { get; set; }
+		/// <summary>
+		/// Major FW Version
+		/// </summary>
 		public ushort FirmwareVersionMajor { get; set; }
+		/// <summary>
+		/// Minor FW Version
+		/// </summary>
 		public ushort FirmwareVersionMinor { get; set; }
 
-		public Tile() {
-		}
-
+		/// <summary>
+		/// Create a new empty tile with defaults initialized
+		/// </summary>
+		/// <param name="index"></param>
 		public void CreateDefault(int index) {
 			AccelMeasX = 0;
 			AccelMeasY = 0;
@@ -38,7 +81,7 @@ namespace LifxNetPlus {
 		}
 
 		/// <summary>
-		/// Read payload into tile
+		///     Read payload into tile
 		/// </summary>
 		/// <param name="payload"></param>
 		public void LoadBytes(Payload payload) {
@@ -61,6 +104,10 @@ namespace LifxNetPlus {
 			payload.Advance(4);
 		}
 
+		/// <summary>
+		/// Serialize Tile data to a byte array
+		/// </summary>
+		/// <returns></returns>
 		public byte[] ToBytes() {
 			var output = new List<byte>();
 			output.AddRange(BitConverter.GetBytes(AccelMeasX));

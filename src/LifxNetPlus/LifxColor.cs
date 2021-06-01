@@ -5,20 +5,19 @@ using System.Drawing;
 namespace LifxNetPlus {
 	[Serializable]
 	public class LifxColor {
+		public double B { get; set; }
+		public double H { get; set; }
+		public double S { get; set; }
 
 		public ushort Kelvin { get; set; } = 5750;
-		public double H { get; set; } = 0;
-		public double S { get; set; } = 0;
-		public double B { get; set; } = 0;
-		
-		
+
+
 		private Color _color;
 
 		public LifxColor() {
-			
 		}
 
-		public LifxColor(byte r, byte g, byte b, byte a= 255) {
+		public LifxColor(byte r, byte g, byte b, byte a = 255) {
 			var color = Color.FromArgb(a, r, g, b);
 			var hsb = Utilities.RgbToHsb(color);
 			H = hsb[0];
@@ -32,16 +31,16 @@ namespace LifxNetPlus {
 			B = b;
 			Kelvin = k;
 		}
-		
+
 		public LifxColor(double h, double s, double b, double k = 5750) {
 			H = h;
 			S = s;
 			B = b;
-			Kelvin = (ushort)k;
+			Kelvin = (ushort) k;
 		}
 
 		/// <summary>
-		/// Create a lifx color from RGB color and optional brightness (double, 0-1)
+		///     Create a lifx color from RGB color and optional brightness (double, 0-1)
 		/// </summary>
 		/// <param name="color"></param>
 		/// <param name="brightness"></param>
@@ -55,11 +54,13 @@ namespace LifxNetPlus {
 			}
 
 			B *= brightness;
-			if (B > brightness) B = brightness;
+			if (B > brightness) {
+				B = brightness;
+			}
 		}
-		
+
 		/// <summary>
-		/// Convert(theoretically) our values to HSBK values
+		///     Convert(theoretically) our values to HSBK values
 		/// </summary>
 		/// <returns></returns>
 		public byte[] ToBytes() {
@@ -79,15 +80,13 @@ namespace LifxNetPlus {
 			output.AddRange(BitConverter.GetBytes(Kelvin));
 			return output.ToArray();
 		}
-		
+
 		/// <summary>
-		/// Return Lifx HSBK string representation of the color
+		///     Return Lifx HSBK string representation of the color
 		/// </summary>
 		/// <returns></returns>
 		public string ToHsbkString() {
 			return H + ", " + S + ", " + B + ", " + Kelvin;
 		}
-
-		
 	}
 }

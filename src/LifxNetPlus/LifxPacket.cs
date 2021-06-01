@@ -7,12 +7,6 @@ using System.Linq;
 namespace LifxNetPlus {
 	[Serializable]
 	public class LifxPacket {
-		public MessageType Type { get; set; }
-		public string TargetMacAddressName {
-			get { return string.Join(":", Target.Take(6).Select(tb => tb.ToString("X2")).ToArray()); }
-		}
-		
-		public ushort Size { get; set; }
 		public bool AcknowledgeRequired { get; set; }
 		public bool Addressable { get; set; }
 		public bool ResponseRequired { get; set; }
@@ -21,10 +15,17 @@ namespace LifxNetPlus {
 		public byte Sequence { get; set; }
 		public byte[] Target { get; set; }
 		public DateTime AtTime { get; set; }
-		
+		public MessageType Type { get; set; }
+
 		public Payload Payload { get; set; }
-		
+
+		public string TargetMacAddressName {
+			get { return string.Join(":", Target.Take(6).Select(tb => tb.ToString("X2")).ToArray()); }
+		}
+
 		public uint Source { get; set; }
+
+		public ushort Size { get; set; }
 		public const ushort Protocol = 1024;
 
 		public LifxPacket() {
@@ -54,7 +55,7 @@ namespace LifxNetPlus {
 			Payload = new Payload();
 			var len = ms.Capacity - ms.Position;
 			if (len > 0) {
-				Payload = new Payload(reader.ReadBytes((int)len));
+				Payload = new Payload(reader.ReadBytes((int) len));
 			}
 		}
 
@@ -71,10 +72,12 @@ namespace LifxNetPlus {
 			Type = lifxPacket.Type;
 			AtTime = lifxPacket.AtTime;
 			Payload = lifxPacket.Payload;
-			if (Size == 0) Size = (ushort) (Payload.ToArray().Length + 36);
+			if (Size == 0) {
+				Size = (ushort) (Payload.ToArray().Length + 36);
+			}
 		}
 
-		
+
 		public LifxPacket(MessageType type, params object[] args) {
 			Source = MessageId.GetSource();
 			Sequence = MessageId.GetNextSequence();
@@ -86,7 +89,7 @@ namespace LifxNetPlus {
 
 
 		/// <summary>
-		/// Return our packet as a series of bytes
+		///     Return our packet as a series of bytes
 		/// </summary>
 		/// <returns></returns>
 		public byte[] Encode() {
@@ -100,12 +103,12 @@ namespace LifxNetPlus {
 			proto2 = SetBit(proto2, 12, Addressable);
 			proto2 = SetBit(proto2, 13, Tagged);
 			proto2 = SetBit(proto2, 14, Origin == 1);
-			
+
 			bytes.AddRange(proto2);
 			bytes.AddRange(BitConverter.GetBytes(Source));
-			
+
 			// Frame address
-			
+
 			// Pad target address if only 6 bytes
 			var tList = Target.ToList();
 			if (Target.Length == 6) {
@@ -133,7 +136,7 @@ namespace LifxNetPlus {
 		}
 
 		/// <summary>
-		/// Encode the Packet to a string
+		///     Encode the Packet to a string
 		/// </summary>
 		/// <returns></returns>
 		public override string ToString() {
