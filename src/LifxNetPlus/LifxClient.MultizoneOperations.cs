@@ -55,18 +55,14 @@ namespace LifxNetPlus {
 			
 			var count = (byte) colors.Count;
 			var doApply = apply ? (byte)0x01 : (byte)0x00;
-			var args = new List<object> {
+			var args = new List<object>(86) {
 				transitionDuration, // Uint32
 				doApply, // Uint8
 				index, // Uint16
 				count
 			};
 			for (var i = 0; i < 82; i++) {
-				if (colors.Count > i) {
-					args.Add(colors[i]);
-				} else {
-					args.Add(new LifxColor());
-				}
+				args.Add(colors.Count > i ? colors[i] : new LifxColor());
 			}
 			
 			var packet = new LifxPacket(MessageType.SetExtendedColorZones) {

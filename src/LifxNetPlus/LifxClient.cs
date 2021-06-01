@@ -107,15 +107,17 @@ namespace LifxNetPlus {
 			//Debug.WriteLine("PACK BYTES: " + HexString(pack.Encode()));
 			return response;
 		}
+
 		
 		private async Task BroadcastMessageAsync(Device device, LifxPacket packet) {
 			var hostname = device.HostName;
 			packet.Target = device.MacAddress;
-			BroadcastPayloadAsync<AcknowledgementResponse>(hostname, packet).ConfigureAwait(false);
-			var bytes = packet.Encode();
-			var ep = new IPEndPoint(IPAddress.Parse(device.HostName), 56700);
-			var pack = ParseMessage(bytes, ep, false);
-			//Debug.WriteLine($"LOCAL=>{hostname}::{packet.Type}: " + JsonConvert.SerializeObject(pack));
+			if (_socket == null)
+				throw new InvalidOperationException("No valid socket");
+			
+			var msg = packet.Encode();
+			_socket.SendAsync(msg, msg.Length, hostname, Port).ConfigureAwait(false);
+			await Task.FromResult(true);
 		}
 
 		private async Task<T> BroadcastPayloadAsync<T>(string host, LifxPacket packet)
@@ -156,7 +158,8 @@ namespace LifxNetPlus {
 
 			return result;
 		}
-
+		
+		
 
 		public static LifxResponse ParseMessage(byte[] packet, IPEndPoint ep = null, bool log = true) {
 			if (ep == null) ep = new IPEndPoint(IPAddress.Any, 56700);

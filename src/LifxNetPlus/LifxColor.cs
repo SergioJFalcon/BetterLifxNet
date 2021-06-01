@@ -1,11 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.Common;
-using System.Diagnostics;
 using System.Drawing;
-using Colourful;
-using Colourful.Conversion;
-using Newtonsoft.Json;
 
 namespace LifxNetPlus {
 	[Serializable]
@@ -55,10 +50,12 @@ namespace LifxNetPlus {
 			H = hsb[0];
 			S = hsb[1];
 			B = hsb[2];
-			if (brightness != -1) {
-				B *= brightness;
-				if (B > brightness) B = brightness;
+			if (brightness == -1) {
+				return;
 			}
+
+			B *= brightness;
+			if (B > brightness) B = brightness;
 		}
 		
 		/// <summary>
@@ -66,16 +63,19 @@ namespace LifxNetPlus {
 		/// </summary>
 		/// <returns></returns>
 		public byte[] ToBytes() {
-			var output = new List<byte>();
-			ushort h, s, b;
-			
-			h = (ushort) (H / 360 * 65535);
-			s = (ushort) (S * 65535);
-			b = (ushort) (B * 65535);
+			var output = new List<byte>(8);
 
-			output.AddRange(BitConverter.GetBytes(h));
-			output.AddRange(BitConverter.GetBytes(s));
-			output.AddRange(BitConverter.GetBytes(b));
+			var hu = (ushort) (Math.Round(0x10000 * H) / 360 % 0x10000);
+			var sa = (ushort) Math.Round(0xFFFF * S);
+			var br = (ushort) Math.Round(0xFFFF * B);
+
+			var h = (ushort) (H / 360 * 65535);
+			var s = (ushort) (S * 65535);
+			var b = (ushort) (B * 65535);
+
+			output.AddRange(BitConverter.GetBytes(hu));
+			output.AddRange(BitConverter.GetBytes(sa));
+			output.AddRange(BitConverter.GetBytes(br));
 			output.AddRange(BitConverter.GetBytes(Kelvin));
 			return output.ToArray();
 		}

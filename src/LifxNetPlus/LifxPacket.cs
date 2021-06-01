@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Newtonsoft.Json;
 
 namespace LifxNetPlus {
 	[Serializable]
@@ -95,7 +93,7 @@ namespace LifxNetPlus {
 			Addressable = true;
 			// Frame header
 			Size = (ushort) (Payload.ToArray().Length + 36);
-			var bytes = new List<byte>();
+			var bytes = new List<byte>(Size);
 			bytes.AddRange(BitConverter.GetBytes(Size));
 			var proto = BitConverter.GetBytes((ushort) 1024);
 			var proto2 = proto;
