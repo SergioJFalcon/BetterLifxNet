@@ -19,15 +19,12 @@
     <RepositoryType>git</RepositoryType>
     <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
-    <PackageVersion>1.1.1</PackageVersion>
-    <PackageReleaseNotes>Add initial support for Multizone</PackageReleaseNotes>
+    <PackageVersion>1.1.2</PackageVersion>
+    <PackageReleaseNotes>Remove unused packages</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Colorspace" Version="1.0.2" />
-    <PackageReference Include="Colourful" Version="2.0.5" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1-beta1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
   </ItemGroup>
 
 
