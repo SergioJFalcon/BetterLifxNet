@@ -17,7 +17,7 @@ namespace SampleApp.Universal {
 	/// </summary>
 	public sealed partial class MainPage : Page {
 		LifxClient _client;
-		ObservableCollection<LightBulb> bulbs = new ObservableCollection<LightBulb>();
+		ObservableCollection<Device> bulbs = new ObservableCollection<Device>();
 
 		UInt16 hue;
 		private Task pendingUpdateColor;
@@ -49,7 +49,7 @@ namespace SampleApp.Universal {
 
 		private void ClientDeviceDeviceLost(object sender, LifxClient.DeviceDiscoveryEventArgs e) {
 			var _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
-				var bulb = e.Device as LightBulb;
+				var bulb = e.Device;
 				if (bulbs.Contains(bulb))
 					bulbs.Remove(bulb);
 			});
@@ -57,16 +57,16 @@ namespace SampleApp.Universal {
 
 		private void ClientDeviceDeviceDiscovered(object sender, LifxClient.DeviceDiscoveryEventArgs e) {
 			var _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
-				var bulb = e.Device as LightBulb;
+				var bulb = e.Device;
 				if (!bulbs.Contains(bulb))
 					bulbs.Add(bulb);
 			});
 		}
 
 		private async void bulbList_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-			var bulb = bulbList.SelectedItem as LightBulb;
+			var bulb = bulbList.SelectedItem;
 			if (bulb != null) {
-				var state = await _client.GetLightStateAsync(bulb);
+				var state = await _client.GetLightStateAsync((Device)bulb);
 				Name.Text = state.Label;
 				PowerState.IsOn = state.IsOn;
 				hue = state.Hue;
@@ -80,19 +80,19 @@ namespace SampleApp.Universal {
 		}
 
 		private async void PowerState_Toggled(object sender, RoutedEventArgs e) {
-			var bulb = bulbList.SelectedItem as LightBulb;
+			var bulb = bulbList.SelectedItem;
 			if (bulb != null) {
-				await _client.SetDevicePowerStateAsync(bulb, PowerState.IsOn);
+				await _client.SetDevicePowerStateAsync((Device)bulb, PowerState.IsOn);
 			}
 		}
 
 		private void brightnessSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e) {
-			var bulb = bulbList.SelectedItem as LightBulb;
+			var bulb = bulbList.SelectedItem;
 			if (bulb != null)
-				SetColor(bulb, null, null, (UInt16) e.NewValue);
+				SetColor((Device)bulb, null, null, (UInt16) e.NewValue);
 		}
 
-		private async void SetColor(LightBulb bulb, ushort? hue, ushort? saturation, ushort? brightness) {
+		private async void SetColor(Device bulb, ushort? hue, ushort? saturation, ushort? brightness) {
 			if (_client == null || bulb == null) return;
 			//Is a task already running? This avoids updating too often.
 			//Come back and execute last call when currently running operation is complete
@@ -131,9 +131,9 @@ namespace SampleApp.Universal {
 			var p = e.GetPosition(elm);
 			var Hue = p.X / elm.ActualWidth * 65535;
 			var Sat = p.Y / elm.ActualHeight * 65535;
-			var bulb = bulbList.SelectedItem as LightBulb;
+			var bulb = bulbList.SelectedItem;
 			if (bulb != null) {
-				SetColor(bulb, (ushort) Hue, (ushort) Sat, null);
+				SetColor((Device)bulb, (ushort) Hue, (ushort) Sat, null);
 			}
 
 			translate.X = p.X;

@@ -101,7 +101,7 @@ namespace ColorSendTest {
 			// Save our existing states
 			var stateList = new List<LightStateResponse>();
 			foreach (var b in _devicesBulb) {
-				var bulb = (LightBulb) b;
+				var bulb = b;
 				var state = await _client.GetLightStateAsync(bulb);
 				stateList.Add(state);
 				_client.SetPowerAsync(b, 1).ConfigureAwait(false);

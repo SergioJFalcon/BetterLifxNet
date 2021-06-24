@@ -5,34 +5,74 @@ using System.IO;
 using System.Linq;
 
 namespace LifxNetPlus {
+	/// <summary>
+	/// Lifx Packet Structure
+	/// </summary>
 	[Serializable]
 	public class LifxPacket {
+		/// <summary>
+		/// Acknowledgement required
+		/// </summary>
 		public bool AcknowledgeRequired { get; set; }
+		/// <summary>
+		/// Addressable
+		/// </summary>
 		public bool Addressable { get; set; }
+		/// <summary>
+		/// Response required
+		/// </summary>
 		public bool ResponseRequired { get; set; }
+		/// <summary>
+		/// Packet is tagged
+		/// </summary>
 		public bool Tagged { get; set; }
+		/// <summary>
+		/// Origin
+		/// </summary>
 		public byte Origin { get; set; }
+		/// <summary>
+		/// Sequence
+		/// </summary>
 		public byte Sequence { get; set; }
+		/// <summary>
+		/// Target
+		/// </summary>
 		public byte[] Target { get; set; }
+		/// <summary>
+		/// Message time
+		/// </summary>
 		public DateTime AtTime { get; set; }
+		/// <summary>
+		/// Message Type
+		/// </summary>
 		public MessageType Type { get; set; }
 
+		/// <summary>
+		/// The payload
+		/// </summary>
 		public Payload Payload { get; set; }
 
+		/// <summary>
+		/// Target mac address as a string
+		/// </summary>
 		public string TargetMacAddressName {
 			get { return string.Join(":", Target.Take(6).Select(tb => tb.ToString("X2")).ToArray()); }
 		}
 
+		/// <summary>
+		/// Source identifier
+		/// </summary>
 		public uint Source { get; set; }
 
+		/// <summary>
+		/// Message size
+		/// </summary>
 		public ushort Size { get; set; }
-		public const ushort Protocol = 1024;
 
-		public LifxPacket() {
-			Source = MessageId.GetSource();
-			Sequence = MessageId.GetNextSequence();
-		}
-
+		/// <summary>
+		/// Construct a packet from incoming data
+		/// </summary>
+		/// <param name="data"></param>
 		public LifxPacket(byte[] data) {
 			MemoryStream ms = new MemoryStream(data);
 			var reader = new BinaryReader(ms);
@@ -59,6 +99,10 @@ namespace LifxNetPlus {
 			}
 		}
 
+		/// <summary>
+		/// Create a lifx packet from an existing packet
+		/// </summary>
+		/// <param name="lifxPacket"></param>
 		public LifxPacket(LifxPacket lifxPacket) {
 			Size = lifxPacket.Size;
 			Addressable = lifxPacket.Addressable;
@@ -78,6 +122,11 @@ namespace LifxNetPlus {
 		}
 
 
+		/// <summary>
+		/// Create a new Lifx Packet using a type and array of argument objects
+		/// </summary>
+		/// <param name="type">Message Type</param>
+		/// <param name="args">Argument array</param>
 		public LifxPacket(MessageType type, params object[] args) {
 			Source = MessageId.GetSource();
 			Sequence = MessageId.GetNextSequence();
@@ -123,9 +172,6 @@ namespace LifxNetPlus {
 			bytes.Add(resByte);
 			bytes.Add(Sequence);
 			AtTime = DateTime.Now;
-			var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-			//var tLong = Convert.ToInt64((AtTime - epoch).TotalSeconds);
-			//bytes.AddRange(BitConverter.GetBytes(tLong));
 			bytes.AddRange(new byte[] {0, 0, 0, 0, 0, 0, 0, 0}); // Reserved 2
 
 			bytes.AddRange(BitConverter.GetBytes((ushort) Type));

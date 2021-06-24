@@ -97,7 +97,7 @@ namespace LifxNetPlus {
 			return hex.ToString();
 		}
 
-		private Task<T> BroadcastMessageAsync<T>(Device device, LifxPacket packet, bool awaitResponse = true)
+		private Task<T?> BroadcastMessageAsync<T>(Device device, LifxPacket packet)
 			where T : LifxResponse {
 			var hostname = device.HostName;
 			packet.Target = device.MacAddress;
@@ -119,11 +119,11 @@ namespace LifxNetPlus {
 			}
 
 			var msg = packet.Encode();
-			_socket.SendAsync(msg, msg.Length, hostname, Port).ConfigureAwait(false);
+			_socket.Send(msg, msg.Length, hostname, Port);
 			await Task.FromResult(true);
 		}
 
-		private async Task<T> BroadcastPayloadAsync<T>(string host, LifxPacket packet)
+		private async Task<T?> BroadcastPayloadAsync<T>(string host, LifxPacket packet)
 			where T : LifxResponse {
 			if (_socket == null) {
 				throw new InvalidOperationException("No valid socket");
@@ -144,10 +144,7 @@ namespace LifxNetPlus {
 
 			var msg = packet.Encode();
 			await _socket.SendAsync(msg, msg.Length, host, Port);
-
-			//{
-			//	await WritePacketToStreamAsync(stream, header, (UInt16)type, payload).ConfigureAwait(false);
-			//}
+			
 			T result = default;
 			if (tcs != null) {
 				var _ = Task.Delay(1000).ContinueWith(t => {
@@ -156,7 +153,7 @@ namespace LifxNetPlus {
 					}
 				});
 				try {
-					result = await tcs.Task.ConfigureAwait(false);
+					result = await tcs.Task;
 				} finally {
 					_taskCompletions.Remove(packet.Sequence);
 				}

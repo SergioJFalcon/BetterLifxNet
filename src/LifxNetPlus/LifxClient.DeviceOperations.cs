@@ -32,7 +32,7 @@ namespace LifxNetPlus {
 
 			var packet = new LifxPacket(MessageType.DeviceSetPower, isOn ? 65535 : 0);
 
-			_ = await BroadcastMessageAsync<AcknowledgementResponse>(device, packet).ConfigureAwait(false);
+			_ = await BroadcastMessageAsync<AcknowledgementResponse>(device, packet);
 		}
 
 		/// <summary>
@@ -46,7 +46,7 @@ namespace LifxNetPlus {
 			}
 
 			var resp = await BroadcastMessageAsync<StateLabelResponse>(device,
-				new LifxPacket(MessageType.DeviceGetLabel)).ConfigureAwait(false);
+				new LifxPacket(MessageType.DeviceGetLabel));
 			return resp.Label;
 		}
 
@@ -62,7 +62,7 @@ namespace LifxNetPlus {
 			}
 
 			var packet = new LifxPacket(MessageType.DeviceGetOwner);
-			var resp = await BroadcastMessageAsync<StateOwnerResponse>(device, packet).ConfigureAwait(false);
+			var resp = await BroadcastMessageAsync<StateOwnerResponse>(device, packet);
 			return resp;
 		}
 
@@ -77,7 +77,7 @@ namespace LifxNetPlus {
 			}
 
 			var packet = new LifxPacket(MessageType.WanGet) {Target = device.MacAddress};
-			var resp = await BroadcastMessageAsync<StateWanResponse>(device, packet).ConfigureAwait(false);
+			var resp = await BroadcastMessageAsync<StateWanResponse>(device, packet);
 			//Debug.WriteLine("Response: " + resp.Payload);
 			return resp;
 		}

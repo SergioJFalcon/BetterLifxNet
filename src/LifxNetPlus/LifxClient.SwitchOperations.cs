@@ -10,7 +10,7 @@ namespace LifxNetPlus {
 		/// <param name="relayIndex">The relay on the switch starting from 0</param>
 		/// <returns>A StateRelayPower message.</returns>
 		/// <exception cref="ArgumentNullException"></exception>
-		public async Task<StateRelayPowerResponse> GetRelayPowerAsync(Device device, int relayIndex = 0) {
+		public async Task<StateRelayPowerResponse?> GetRelayPowerAsync(Device device, int relayIndex = 0) {
 			if (device == null) {
 				throw new ArgumentNullException(nameof(device));
 			}
@@ -30,7 +30,7 @@ namespace LifxNetPlus {
 		/// <param name="enable">Whether to turn the device on or not.</param>
 		/// <returns>A StateRelayPower message.</returns>
 		/// <exception cref="ArgumentNullException"></exception>
-		public async Task<StateRelayPowerResponse> SetRelayPowerAsync(Device device, int relayIndex, bool enable) {
+		public async Task<StateRelayPowerResponse?> SetRelayPowerAsync(Device device, int relayIndex, bool enable) {
 			if (device == null) {
 				throw new ArgumentNullException(nameof(device));
 			}

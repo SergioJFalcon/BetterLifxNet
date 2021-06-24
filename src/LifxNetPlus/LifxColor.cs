@@ -3,20 +3,42 @@ using System.Collections.Generic;
 using System.Drawing;
 
 namespace LifxNetPlus {
+	/// <summary>
+	/// Handler Converting RGB color to Lifx data format
+	/// </summary>
 	[Serializable]
 	public class LifxColor {
+		/// <summary>
+		/// Brightness
+		/// </summary>
 		public double B { get; set; }
+		/// <summary>
+		/// Hue
+		/// </summary>
 		public double H { get; set; }
+		/// <summary>
+		/// Saturation
+		/// </summary>
 		public double S { get; set; }
 
+		/// <summary>
+		/// Color Temperature
+		/// </summary>
 		public ushort Kelvin { get; set; } = 5750;
 
-
-		private Color _color;
-
+		/// <summary>
+		/// Default constructor
+		/// </summary>
 		public LifxColor() {
 		}
 
+		/// <summary>
+		/// Set lifx color based on RGBA value
+		/// </summary>
+		/// <param name="r">Red</param>
+		/// <param name="g">Green</param>
+		/// <param name="b">Blue</param>
+		/// <param name="a">Alpha (default is 255)</param>
 		public LifxColor(byte r, byte g, byte b, byte a = 255) {
 			var color = Color.FromArgb(a, r, g, b);
 			var hsb = Utilities.RgbToHsb(color);
@@ -25,6 +47,13 @@ namespace LifxNetPlus {
 			B = hsb[2];
 		}
 
+		/// <summary>
+		/// Create lifx color using HSBK values
+		/// </summary>
+		/// <param name="h">Hue</param>
+		/// <param name="s">Saturation</param>
+		/// <param name="b">Brightness</param>
+		/// <param name="k">Kelvin</param>
 		public LifxColor(ushort h, ushort s, ushort b, ushort k) {
 			H = h;
 			S = s;
@@ -32,6 +61,13 @@ namespace LifxNetPlus {
 			Kelvin = k;
 		}
 
+		/// <summary>
+		/// Overload to create lifx color using HSB and optional K value
+		/// </summary>
+		/// <param name="h">Hue</param>
+		/// <param name="s">Saturation</param>
+		/// <param name="b">Brightness</param>
+		/// <param name="k">Kelvin (Default is 5750)</param>
 		public LifxColor(double h, double s, double b, double k = 5750) {
 			H = h;
 			S = s;
@@ -69,10 +105,6 @@ namespace LifxNetPlus {
 			var hu = (ushort) (Math.Round(0x10000 * H) / 360 % 0x10000);
 			var sa = (ushort) Math.Round(0xFFFF * S);
 			var br = (ushort) Math.Round(0xFFFF * B);
-
-			var h = (ushort) (H / 360 * 65535);
-			var s = (ushort) (S * 65535);
-			var b = (ushort) (B * 65535);
 
 			output.AddRange(BitConverter.GetBytes(hu));
 			output.AddRange(BitConverter.GetBytes(sa));

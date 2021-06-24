@@ -26,7 +26,7 @@ namespace SampleApp.netcore {
 		private static async void ClientDeviceDiscovered(object sender, LifxClient.DeviceDiscoveryEventArgs e) {
 			Console.WriteLine($"Device {e.Device.MacAddressName} found @ {e.Device.HostName}");
 
-			var pwr = _client.SetLightPowerAsync(e.Device as LightBulb,true);
+			var pwr = _client.SetLightPowerAsync(e.Device,true);
 			
 			var foo2 = await _client.GetWanAsync(e.Device);
 			Console.WriteLine("Result of 201: " + JsonConvert.SerializeObject(foo2));

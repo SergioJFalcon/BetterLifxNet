@@ -53,7 +53,7 @@ namespace LifxNetPlus {
 			var svc = msg.Service;
 			var port = msg.Port;
 			var lastSeen = DateTime.UtcNow;
-			var device = new LightBulb(address, mac, svc, port) {
+			var device = new Device(address, mac, svc, port) {
 				LastSeen = lastSeen
 			};
 

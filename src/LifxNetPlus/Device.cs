@@ -5,7 +5,7 @@ namespace LifxNetPlus {
 	/// <summary>
 	///     LIFX Generic Device
 	/// </summary>
-	public abstract class Device {
+	public class Device {
 		/// <summary>
 		///     Service ID
 		/// </summary>
@@ -32,10 +32,15 @@ namespace LifxNetPlus {
 		///     Service port
 		/// </summary>
 		public uint Port { get; }
+		
+		/// <summary>
+		/// Product ID
+		/// </summary>
+		public uint ProductId { get; set; }
 
 		internal DateTime LastSeen { get; set; }
 
-		internal Device(string hostname, byte[] macAddress, byte service, uint port) {
+		public Device(string hostname, byte[] macAddress, byte service, uint port, uint productId = 0) {
 			if (hostname == null) {
 				throw new ArgumentNullException(nameof(hostname));
 			}
@@ -49,6 +54,7 @@ namespace LifxNetPlus {
 			Service = service;
 			Port = port;
 			LastSeen = DateTime.MinValue;
+			ProductId = productId;
 		}
 	}
 }

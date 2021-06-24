@@ -33,8 +33,9 @@ namespace LifxNetPlus {
 
 			var doApply = apply ? 0x01 : 0x00;
 			var duration = (uint) transitionDuration.TotalMilliseconds;
-			var packet = new LifxPacket(MessageType.SetColorZones);
-			packet.Payload = new Payload(new object[] {(byte) startIndex, (byte) endIndex, color, duration, doApply});
+			var packet = new LifxPacket(MessageType.SetColorZones) {
+				Payload = new Payload(new object[] {(byte) startIndex, (byte) endIndex, color, duration, doApply})
+			};
 			await BroadcastMessageAsync<AcknowledgementResponse>(device, packet);
 		}
 
@@ -71,14 +72,14 @@ namespace LifxNetPlus {
 			}
 
 			var packet = new LifxPacket(MessageType.SetExtendedColorZones) {
-				Payload = new Payload(args.ToArray())
+				Payload = new Payload(args.ToArray()),
+				AcknowledgeRequired = false,
+				Addressable = true,
+				ResponseRequired = false,
+				Tagged = false,
+				Target = device.MacAddress
 			};
-			packet.AcknowledgeRequired = false;
-			packet.Addressable = true;
-			packet.ResponseRequired = false;
-			packet.Tagged = false;
-			packet.Target = device.MacAddress;
-			BroadcastMessageAsync(device, packet).ConfigureAwait(false);
+			await BroadcastMessageAsync(device, packet);
 		}
 
 		/// <summary>
@@ -87,7 +88,7 @@ namespace LifxNetPlus {
 		/// <param name="device"></param>
 		/// <returns></returns>
 		/// <exception cref="ArgumentNullException"></exception>
-		public Task<StateExtendedColorZonesResponse> GetExtendedColorZonesAsync(Device device) {
+		public Task<StateExtendedColorZonesResponse?> GetExtendedColorZonesAsync(Device device) {
 			if (device == null) {
 				throw new ArgumentNullException(nameof(device));
 			}
@@ -104,7 +105,7 @@ namespace LifxNetPlus {
 		/// <param name="endIndex">End index of requested zones</param>
 		/// <returns>Either a "StateZone" response for single-zone devices, or "StateMultiZone" response.</returns>
 		/// <exception cref="ArgumentNullException"></exception>
-		public Task<StateMultiZoneResponse> GetColorZonesAsync(Device device, int startIndex, int endIndex) {
+		public Task<StateMultiZoneResponse?> GetColorZonesAsync(Device device, int startIndex, int endIndex) {
 			if (device == null) {
 				throw new ArgumentNullException(nameof(device));
 			}
@@ -124,7 +125,7 @@ namespace LifxNetPlus {
 		/// <param name="index">Selected index of the requested zone</param>
 		/// <returns>Either a "StateZone" response for single-zone devices, or "StateMultiZone" response.</returns>
 		/// <exception cref="ArgumentNullException"></exception>
-		public Task<StateZoneResponse> GetColorZoneAsync(Device device, int index) {
+		public Task<StateZoneResponse?> GetColorZoneAsync(Device device, int index) {
 			if (device == null) {
 				throw new ArgumentNullException(nameof(device));
 			}

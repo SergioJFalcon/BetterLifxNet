@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 namespace LifxNetPlus {
 	public partial class LifxClient {
 		/// <summary>
+		/// Tile Effect Type
 		/// </summary>
 		public enum TileEffectType {
 			Off = 0,
@@ -20,9 +21,9 @@ namespace LifxNetPlus {
 		/// </summary>
 		/// <param name="group"></param>
 		/// <returns>StateDeviceChainResponse</returns>
-		public async Task<StateDeviceChainResponse> GetDeviceChainAsync(Device group) {
+		public async Task<StateDeviceChainResponse?> GetDeviceChainAsync(Device group) {
 			if (group == null) {
-				throw new ArgumentNullException(nameof(@group));
+				throw new ArgumentNullException(nameof(group));
 			}
 
 			return await BroadcastMessageAsync<StateDeviceChainResponse>(group,
@@ -43,7 +44,7 @@ namespace LifxNetPlus {
 			}
 
 			var packet = new LifxPacket(MessageType.SetUserPosition, tileIndex, Reserved, userX, userY);
-			await BroadcastMessageAsync<AcknowledgementResponse>(group, packet).ConfigureAwait(false);
+			await BroadcastMessageAsync<AcknowledgementResponse>(group, packet);
 		}
 
 		/// <summary>
@@ -59,7 +60,7 @@ namespace LifxNetPlus {
 		/// <param name="y">Leave at 0</param>
 		/// <param name="width">Leave at 8</param>
 		/// <returns>StateTileState64Response</returns>
-		public async Task<StateTileState64Response> GetTileState64Async(Device device, int tileIndex, int length,
+		public async Task<StateTileState64Response?> GetTileState64Async(Device device, int tileIndex, int length,
 			int x = 0, int y = 0, int width = 8) {
 			if (device == null) {
 				throw new ArgumentNullException(nameof(device));
@@ -85,18 +86,18 @@ namespace LifxNetPlus {
 		/// <param name="y">Leave at 0</param>
 		/// <param name="width">Leave at 8</param>
 		/// <returns>StateTileState64Response</returns>
-		public async Task<StateTileState16Response> SetTileState16Async(Device device, int tileIndex, int length,
+		public async Task<StateTileState16Response?> SetTileState16Async(Device device, int tileIndex, int length,
 			long duration, LifxColor[] colors, int x = 0, int y = 0, int width = 8) {
 			if (device == null) {
 				throw new ArgumentNullException(nameof(device));
 			}
 
-			var packet = new LifxPacket(MessageType.SetTileState16);
-			packet.Payload = new Payload(new object[] {
-				(byte) tileIndex, (byte) length, (byte) Reserved,
-				(byte) x, (byte) y, (byte) width, (uint) duration,
-				colors
-			});
+			var packet = new LifxPacket(MessageType.SetTileState16) {
+				Payload = new Payload(new object[] {
+					(byte) tileIndex, (byte) length, (byte) Reserved, (byte) x, (byte) y, (byte) width, (uint) duration,
+					colors
+				})
+			};
 			return await BroadcastMessageAsync<StateTileState16Response>(device, packet);
 		}
 
@@ -115,18 +116,18 @@ namespace LifxNetPlus {
 		/// <param name="y">Leave at 0</param>
 		/// <param name="width">Leave at 8</param>
 		/// <returns>StateTileState64Response</returns>
-		public async Task<StateTileState64Response> SetTileState64Async(Device device, int tileIndex, int length,
+		public async Task<StateTileState64Response?> SetTileState64Async(Device device, int tileIndex, int length,
 			long duration, LifxColor[] colors, int x = 0, int y = 0, int width = 8) {
 			if (device == null) {
 				throw new ArgumentNullException(nameof(device));
 			}
 
-			var packet = new LifxPacket(MessageType.SetTileState64);
-			packet.Payload = new Payload(new object[] {
-				(byte) tileIndex, (byte) length, (byte) Reserved,
-				(byte) x, (byte) y, (byte) width, (uint) duration,
-				colors
-			});
+			var packet = new LifxPacket(MessageType.SetTileState64) {
+				Payload = new Payload(new object[] {
+					(byte) tileIndex, (byte) length, (byte) Reserved, (byte) x, (byte) y, (byte) width, (uint) duration,
+					colors
+				})
+			};
 			return await BroadcastMessageAsync<StateTileState64Response>(device, packet);
 		}
 
@@ -144,17 +145,18 @@ namespace LifxNetPlus {
 		/// <param name="type"></param>
 		/// <param name="palette"></param>
 		/// <returns>StateTileState64Response</returns>
-		public async Task<StateTileEffectResponse> SetTileEffectAsync(Device device, uint instanceId,
+		public async Task<StateTileEffectResponse?> SetTileEffectAsync(Device device, uint instanceId,
 			TileEffectType type, uint speed, ulong duration, LifxColor[] palette) {
 			if (device == null) {
 				throw new ArgumentNullException(nameof(device));
 			}
 
-			var packet = new LifxPacket(MessageType.SetTileState16);
-			packet.Payload = new Payload(new object[] {
-				(byte) Reserved, (byte) Reserved, instanceId, (byte) type, speed, duration, (ushort) Reserved,
-				(uint) Reserved, (byte) palette.Length, palette
-			});
+			var packet = new LifxPacket(MessageType.SetTileState16) {
+				Payload = new Payload(new object[] {
+					(byte) Reserved, (byte) Reserved, instanceId, (byte) type, speed, duration, (ushort) Reserved,
+					(uint) Reserved, (byte) palette.Length, palette
+				})
+			};
 			return await BroadcastMessageAsync<StateTileEffectResponse>(device, packet);
 		}
 	}

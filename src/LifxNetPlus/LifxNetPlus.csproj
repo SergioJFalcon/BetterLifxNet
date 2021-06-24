@@ -19,7 +19,7 @@
     <RepositoryType>git</RepositoryType>
     <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
-    <PackageVersion>1.1.2</PackageVersion>
+    <PackageVersion>1.1.3</PackageVersion>
     <PackageReleaseNotes>Remove unused packages</PackageReleaseNotes>
   </PropertyGroup>
 
