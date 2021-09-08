@@ -19,7 +19,7 @@
     <RepositoryType>git</RepositoryType>
     <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
-    <PackageVersion>1.1.4</PackageVersion>
+    <PackageVersion>1.1.5</PackageVersion>
     <PackageReleaseNotes>Cleanup code, fix build warnings, add documentation.</PackageReleaseNotes>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
