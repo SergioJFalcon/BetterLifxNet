@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -22,11 +22,26 @@ namespace LifxNetPlus {
 		/// </summary>
 		public int Position => (int) _ms.Position;
 
+		/// <summary>
+		/// Gets or sets the value of the objects
+		/// </summary>
 		public List<object> Objects { get; set; }
 
+		/// <summary>
+		/// The br
+		/// </summary>
 		private readonly BinaryReader _br;
+		/// <summary>
+		/// The data
+		/// </summary>
 		private readonly List<byte> _data;
+		/// <summary>
+		/// The len
+		/// </summary>
 		private readonly long _len;
+		/// <summary>
+		/// The ms
+		/// </summary>
 		private readonly MemoryStream _ms;
 
 
@@ -398,6 +413,10 @@ namespace LifxNetPlus {
 			return output;
 		}
 
+		/// <summary>
+		/// Adds the input
+		/// </summary>
+		/// <param name="input">The input</param>
 		private void Add(string input) {
 			var bytes = input.Select(l => Encoding.Unicode.GetBytes(l.ToString())[0]).ToList();
 			var paddedBytes = new byte[32];
@@ -412,62 +431,118 @@ namespace LifxNetPlus {
 			_data.AddRange(paddedBytes);
 		}
 
+		/// <summary>
+		/// Adds the input
+		/// </summary>
+		/// <param name="input">The input</param>
 		private void Add(byte input) {
 			_data.Add(input);
 		}
 
+		/// <summary>
+		/// Adds the input
+		/// </summary>
+		/// <param name="input">The input</param>
 		private void Add(byte[] input) {
 			_data.AddRange(input);
 		}
 
+		/// <summary>
+		/// Adds the input
+		/// </summary>
+		/// <param name="input">The input</param>
 		private void Add(short input) {
 			_data.AddRange(BitConverter.GetBytes(input));
 		}
 
+		/// <summary>
+		/// Adds the input
+		/// </summary>
+		/// <param name="input">The input</param>
 		private void Add(int input) {
 			_data.AddRange(BitConverter.GetBytes(input));
 		}
 
+		/// <summary>
+		/// Adds the input
+		/// </summary>
+		/// <param name="input">The input</param>
 		private void Add(uint input) {
 			_data.AddRange(BitConverter.GetBytes(input));
 		}
 
+		/// <summary>
+		/// Adds the input
+		/// </summary>
+		/// <param name="input">The input</param>
 		private void Add(long input) {
 			_data.AddRange(BitConverter.GetBytes(input));
 		}
 
+		/// <summary>
+		/// Adds the input
+		/// </summary>
+		/// <param name="input">The input</param>
 		private void Add(float input) {
 			_data.AddRange(BitConverter.GetBytes(input));
 		}
 
+		/// <summary>
+		/// Adds the input
+		/// </summary>
+		/// <param name="input">The input</param>
 		private void Add(double input) {
 			_data.AddRange(BitConverter.GetBytes(input));
 		}
 
+		/// <summary>
+		/// Adds the input
+		/// </summary>
+		/// <param name="input">The input</param>
 		private void Add(ushort input) {
 			_data.AddRange(BitConverter.GetBytes(input));
 		}
 
+		/// <summary>
+		/// Adds the input
+		/// </summary>
+		/// <param name="input">The input</param>
 		private void Add(ulong input) {
 			_data.AddRange(BitConverter.GetBytes(input));
 		}
 
+		/// <summary>
+		/// Adds the input
+		/// </summary>
+		/// <param name="input">The input</param>
 		private void Add(LifxColor input) {
 			_data.AddRange(input.ToBytes());
 		}
 
+		/// <summary>
+		/// Adds the input
+		/// </summary>
+		/// <param name="input">The input</param>
 		private void Add(IEnumerable<LifxColor> input) {
 			foreach (var lc in input) {
 				Add(lc);
 			}
 		}
 
+		/// <summary>
+		/// Adds the input
+		/// </summary>
+		/// <param name="input">The input</param>
 		private void Add(DateTime input) {
 			var epoch = new DateTime(1970, 1, 1);
 			var updated = input - epoch;
 			Add(updated.TotalMilliseconds * 1000);
 		}
 
+		/// <summary>
+		/// Adds the input
+		/// </summary>
+		/// <param name="input">The input</param>
 		private void Add(Tile input) {
 			Add(input.AccelMeasX);
 			Add(input.AccelMeasY);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 
 namespace LifxNetPlus {
@@ -38,8 +38,21 @@ namespace LifxNetPlus {
 		/// </summary>
 		public uint ProductId { get; set; }
 
+		/// <summary>
+		/// Gets or sets the value of the last seen
+		/// </summary>
 		internal DateTime LastSeen { get; set; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="Device"/> class
+		/// </summary>
+		/// <param name="hostname">The hostname</param>
+		/// <param name="macAddress">The mac address</param>
+		/// <param name="service">The service</param>
+		/// <param name="port">The port</param>
+		/// <param name="productId">The product id</param>
+		/// <exception cref="ArgumentException"></exception>
+		/// <exception cref="ArgumentNullException"></exception>
 		public Device(string hostname, byte[] macAddress, byte service, uint port, uint productId = 0) {
 			if (hostname == null) {
 				throw new ArgumentNullException(nameof(hostname));

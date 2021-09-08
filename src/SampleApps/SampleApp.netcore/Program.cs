@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -6,9 +6,18 @@ using LifxNetPlus;
 using Newtonsoft.Json;
 
 namespace SampleApp.netcore {
+	/// <summary>
+	/// The program class
+	/// </summary>
 	class Program {
+		/// <summary>
+		/// The client
+		/// </summary>
 		static LifxClient _client;
 
+		/// <summary>
+		/// Main
+		/// </summary>
 		static void Main() {
 			var tr1 = new TextWriterTraceListener(Console.Out);
 			Trace.Listeners.Add(tr1);
@@ -19,10 +28,20 @@ namespace SampleApp.netcore {
 			Console.ReadKey();
 		}
 
+		/// <summary>
+		/// Clients the device lost using the specified sender
+		/// </summary>
+		/// <param name="sender">The sender</param>
+		/// <param name="e">The </param>
 		private static void ClientDeviceLost(object sender, LifxClient.DeviceDiscoveryEventArgs e) {
 			Console.WriteLine("Device lost");
 		}
 
+		/// <summary>
+		/// Clients the device discovered using the specified sender
+		/// </summary>
+		/// <param name="sender">The sender</param>
+		/// <param name="e">The </param>
 		private static async void ClientDeviceDiscovered(object sender, LifxClient.DeviceDiscoveryEventArgs e) {
 			Console.WriteLine($"Device {e.Device.MacAddressName} found @ {e.Device.HostName}");
 

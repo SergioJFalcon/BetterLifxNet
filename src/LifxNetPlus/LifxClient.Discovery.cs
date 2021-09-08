@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -6,19 +6,39 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace LifxNetPlus {
+	/// <summary>
+	/// The lifx client class
+	/// </summary>
 	public partial class LifxClient {
 		/// <summary>
 		///     Gets a list of currently known devices
 		/// </summary>
 		public IEnumerable<Device> Devices => devices;
 
+		/// <summary>
+		/// The device
+		/// </summary>
 		private readonly Dictionary<string, Device> _discoveredBulbs = new Dictionary<string, Device>();
+		/// <summary>
+		/// The strip ids
+		/// </summary>
 		private readonly int[] _stripIds = {31, 32, 38};
+		/// <summary>
+		/// The switch ids
+		/// </summary>
 		private readonly int[] _switchIds = {70};
+		/// <summary>
+		/// The tile ids
+		/// </summary>
 		private readonly int[] _tileIds = {55};
+		/// <summary>
+		/// The discover cancellation source
+		/// </summary>
 		private CancellationTokenSource? _discoverCancellationSource;
-		private uint _discoverSourceId;
 
+		/// <summary>
+		/// The device
+		/// </summary>
 		private IList<Device> devices = new List<Device>();
 
 
@@ -32,6 +52,11 @@ namespace LifxNetPlus {
 		/// </summary>
 		public event EventHandler<DeviceDiscoveryEventArgs>? DeviceLost;
 
+		/// <summary>
+		/// Processes the device discovery message using the specified remote address
+		/// </summary>
+		/// <param name="remoteAddress">The remote address</param>
+		/// <param name="msg">The msg</param>
 		private void ProcessDeviceDiscoveryMessage(IPAddress remoteAddress, StateServiceResponse msg) {
 			string id = msg.TargetMacAddressName;
 
@@ -85,7 +110,7 @@ namespace LifxNetPlus {
 					try {
 						//await BroadcastMessageAsync<UnknownResponse>(null, header,
 						//MessageType.DeviceGetService);
-					} catch (Exception e) {
+					} catch (Exception) {
 						//Debug.WriteLine("Broadcast exception: " + e.Message + e.StackTrace);
 					}
 
@@ -126,6 +151,10 @@ namespace LifxNetPlus {
 			/// </summary>
 			public Device Device { get; }
 
+			/// <summary>
+			/// Initializes a new instance of the <see cref="DeviceDiscoveryEventArgs"/> class
+			/// </summary>
+			/// <param name="device">The device</param>
 			internal DeviceDiscoveryEventArgs(Device device) {
 				Device = device;
 			}

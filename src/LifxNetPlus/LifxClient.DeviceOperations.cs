@@ -1,7 +1,10 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 
 namespace LifxNetPlus {
+	/// <summary>
+	/// The lifx client class
+	/// </summary>
 	public partial class LifxClient {
 		/// <summary>
 		///     Turns the device on
@@ -47,7 +50,7 @@ namespace LifxNetPlus {
 
 			var resp = await BroadcastMessageAsync<StateLabelResponse>(device,
 				new LifxPacket(MessageType.DeviceGetLabel));
-			return resp.Label;
+			return resp?.Label ?? "";
 		}
 
 
@@ -56,7 +59,7 @@ namespace LifxNetPlus {
 		/// </summary>
 		/// <param name="device"></param>
 		/// <returns>The device label</returns>
-		public async Task<StateOwnerResponse> GetDeviceOwnerAsync(Device device) {
+		public async Task<StateOwnerResponse?> GetDeviceOwnerAsync(Device device) {
 			if (device == null) {
 				throw new ArgumentNullException(nameof(device));
 			}
@@ -71,7 +74,7 @@ namespace LifxNetPlus {
 		/// </summary>
 		/// <param name="device"></param>
 		/// <returns>The device label</returns>
-		public async Task<StateWanResponse> GetWanAsync(Device device) {
+		public async Task<StateWanResponse?> GetWanAsync(Device device) {
 			if (device == null) {
 				throw new ArgumentNullException(nameof(device));
 			}
@@ -100,7 +103,7 @@ namespace LifxNetPlus {
 		/// <summary>
 		///     Gets the device version
 		/// </summary>
-		public Task<StateVersionResponse> GetDeviceVersionAsync(Device device) {
+		public Task<StateVersionResponse?> GetDeviceVersionAsync(Device device) {
 			if (device == null) {
 				throw new ArgumentNullException(nameof(device));
 			}
@@ -115,7 +118,7 @@ namespace LifxNetPlus {
 		/// <returns>
 		///     <see cref="StateHostFirmwareResponse" />
 		/// </returns>
-		public Task<StateHostFirmwareResponse> GetDeviceHostFirmwareAsync(Device device) {
+		public Task<StateHostFirmwareResponse?> GetDeviceHostFirmwareAsync(Device device) {
 			if (device == null) {
 				throw new ArgumentNullException(nameof(device));
 			}
@@ -132,7 +135,7 @@ namespace LifxNetPlus {
 		///     <see cref="StateHostInfoResponse" />
 		/// </returns>
 		/// <exception cref="ArgumentNullException"></exception>
-		public async Task<StateHostInfoResponse> GetHostInfoAsync(Device device) {
+		public async Task<StateHostInfoResponse?> GetHostInfoAsync(Device device) {
 			if (device == null) {
 				throw new ArgumentNullException(nameof(device));
 			}
@@ -149,7 +152,7 @@ namespace LifxNetPlus {
 		///     <see cref="StateWifiInfoResponse" />
 		/// </returns>
 		/// <exception cref="ArgumentNullException"></exception>
-		public async Task<StateWifiInfoResponse> GetWifiInfoAsync(Device device) {
+		public async Task<StateWifiInfoResponse?> GetWifiInfoAsync(Device device) {
 			if (device == null) {
 				throw new ArgumentNullException(nameof(device));
 			}
@@ -166,7 +169,7 @@ namespace LifxNetPlus {
 		///     <see cref="StateWifiFirmwareResponse" />
 		/// </returns>
 		/// <exception cref="ArgumentNullException"></exception>
-		public async Task<StateWifiFirmwareResponse> GetWifiFirmwareAsync(Device device) {
+		public async Task<StateWifiFirmwareResponse?> GetWifiFirmwareAsync(Device device) {
 			if (device == null) {
 				throw new ArgumentNullException(nameof(device));
 			}
@@ -189,7 +192,7 @@ namespace LifxNetPlus {
 
 			var level = await BroadcastMessageAsync<StatePowerResponse>(device,
 				new LifxPacket(MessageType.DeviceGetPower));
-			return level.Level == 0 ? 0 : 1;
+			return level?.Level == 0 ? 0 : 1;
 		}
 
 		/// <summary>
@@ -221,7 +224,7 @@ namespace LifxNetPlus {
 		///     <see cref="StateInfoResponse" />
 		/// </returns>
 		/// <exception cref="ArrayTypeMismatchException"></exception>
-		public async Task<StateInfoResponse> GetInfoAsync(Device device) {
+		public async Task<StateInfoResponse?> GetInfoAsync(Device device) {
 			if (device == null) {
 				throw new ArrayTypeMismatchException(nameof(device));
 			}
@@ -257,7 +260,7 @@ namespace LifxNetPlus {
 		///     <see cref="StateLocationResponse" />
 		/// </returns>
 		/// <exception cref="ArrayTypeMismatchException"></exception>
-		public async Task<StateLocationResponse> GetLocationAsync(Device device) {
+		public async Task<StateLocationResponse?> GetLocationAsync(Device device) {
 			if (device == null) {
 				throw new ArrayTypeMismatchException(nameof(device));
 			}
@@ -294,7 +297,7 @@ namespace LifxNetPlus {
 		///     <see cref="StateGroupResponse" />
 		/// </returns>
 		/// <exception cref="ArrayTypeMismatchException"></exception>
-		public async Task<StateGroupResponse> GetGroupAsync(Device device) {
+		public async Task<StateGroupResponse?> GetGroupAsync(Device device) {
 			if (device == null) {
 				throw new ArrayTypeMismatchException(nameof(device));
 			}
@@ -311,7 +314,7 @@ namespace LifxNetPlus {
 		///     <see cref="EchoResponse" />
 		/// </returns>
 		/// <exception cref="ArrayTypeMismatchException"></exception>
-		public async Task<EchoResponse> RequestEcho(Device device, byte[] payload) {
+		public async Task<EchoResponse?> RequestEcho(Device device, byte[] payload) {
 			if (device == null) {
 				throw new ArrayTypeMismatchException(nameof(device));
 			}

@@ -1,8 +1,12 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace LifxNetPlus {
+	/// <summary>
+	/// The lifx client class
+	/// </summary>
+	/// <seealso cref="IDisposable"/>
 	public partial class LifxClient : IDisposable {
 		/// <summary>
 		///     This message is used for changing the color of either a single or multiple zones.

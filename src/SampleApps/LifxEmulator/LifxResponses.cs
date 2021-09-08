@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -11,12 +11,26 @@ namespace LifxEmulator {
 	/// Base class for LIFX response types
 	/// </summary>
 	public abstract class LifxResponse : LifxPacket {
+		/// <summary>
+		/// Gets the value of the packet
+		/// </summary>
 		internal LifxPacket Packet { get; }
 		
+		/// <summary>
+		/// Initializes a new instance of the <see cref="LifxResponse"/> class
+		/// </summary>
+		/// <param name="packet">The packet</param>
 		internal LifxResponse(LifxPacket packet) : base(packet) {
 			Packet = packet;
 		}
 
+		/// <summary>
+		/// Creates the type
+		/// </summary>
+		/// <param name="type">The type</param>
+		/// <param name="productInfo">The product info</param>
+		/// <param name="devData">The dev data</param>
+		/// <returns>The lifx packet</returns>
 		internal static LifxPacket Create(MessageType type, Product productInfo, DeviceData devData) {
 			var newPacket = new LifxPacket(MessageType.DeviceAcknowledgement);
 			switch (type) {
@@ -141,9 +155,19 @@ namespace LifxEmulator {
 	/// If the Service is temporarily unavailable, then the port value will be 0.
 	/// </summary>
 	internal class StateServiceResponse : LifxResponse {
+		/// <summary>
+		/// Gets the value of the service
+		/// </summary>
 		private byte Service { get; }
+		/// <summary>
+		/// Gets the value of the port
+		/// </summary>
 		private ulong Port { get; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="StateServiceResponse"/> class
+		/// </summary>
+		/// <param name="newPacket">The new packet</param>
 		internal StateServiceResponse(LifxPacket newPacket) : base(
 			newPacket) {
 			Service = 1;
@@ -156,6 +180,10 @@ namespace LifxEmulator {
 	/// State Tile Tap Config
 	/// </summary>
 	internal class StateTileTapConfigResponse : LifxResponse {
+		/// <summary>
+		/// Initializes a new instance of the <see cref="StateTileTapConfigResponse"/> class
+		/// </summary>
+		/// <param name="newPacket">The new packet</param>
 		internal StateTileTapConfigResponse(LifxPacket newPacket) : base(
 			newPacket) {
 		}
@@ -165,6 +193,10 @@ namespace LifxEmulator {
 	/// Response to a state tile get request 
 	/// </summary>
 	internal class StateTileEffectResponse : LifxResponse {
+		/// <summary>
+		/// Initializes a new instance of the <see cref="StateTileEffectResponse"/> class
+		/// </summary>
+		/// <param name="newPacket">The new packet</param>
 		internal StateTileEffectResponse(LifxPacket newPacket) : base(
 			newPacket) {
 		}
@@ -176,12 +208,32 @@ namespace LifxEmulator {
 	/// public enum Status {
 	/// </summary>
 	public class StateMultizoneStateResponse : LifxResponse {
+		/// <summary>
+		/// Gets the value of the instance
+		/// </summary>
 		public UInt32 Instance { get; }
+		/// <summary>
+		/// Gets the value of the effect type
+		/// </summary>
 		public byte EffectType { get; }
+		/// <summary>
+		/// Gets the value of the speed
+		/// </summary>
 		public UInt32 Speed { get; }
+		/// <summary>
+		/// Gets the value of the duration
+		/// </summary>
 		public UInt64 Duration { get; }
+		/// <summary>
+		/// Gets the value of the parameter
+		/// </summary>
 		public Byte[] Parameter { get; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="StateMultizoneStateResponse"/> class
+		/// </summary>
+		/// <param name="newPacket">The new packet</param>
+		/// <param name="devData">The dev data</param>
 		internal StateMultizoneStateResponse(LifxPacket newPacket, DeviceData devData) : base(newPacket) {
 			Instance = devData.MultizoneId;
 			EffectType = devData.EffectType;
@@ -203,11 +255,25 @@ namespace LifxEmulator {
 	/// Response to GetLabel message. Provides device label.
 	/// </summary>
 	public class StateOwnerResponse : LifxResponse {
+		/// <summary>
+		/// Gets the value of the updated
+		/// </summary>
 		public DateTime Updated { get; }
+		/// <summary>
+		/// Gets the value of the label
+		/// </summary>
 		public string? Label { get; }
 
+		/// <summary>
+		/// Gets the value of the owner
+		/// </summary>
 		public string? Owner { get; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="StateOwnerResponse"/> class
+		/// </summary>
+		/// <param name="newPacket">The new packet</param>
+		/// <param name="devData">The dev data</param>
 		internal StateOwnerResponse(LifxPacket newPacket, DeviceData devData) : base(newPacket) {
 			var oBytes = devData.OwnerPacket;
 			Payload = new Payload(new object[] {oBytes});
@@ -219,8 +285,15 @@ namespace LifxEmulator {
 	/// public enum Status {
 	/// </summary>
 	public class StateWanResponse : LifxResponse {
+		/// <summary>
+		/// Gets the value of the state
+		/// </summary>
 		public byte State { get; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="StateWanResponse"/> class
+		/// </summary>
+		/// <param name="newPacket">The new packet</param>
 		internal StateWanResponse(LifxPacket newPacket) : base(newPacket) {
 			State = 1;
 			Payload = new Payload(new object[] {State});
@@ -232,6 +305,10 @@ namespace LifxEmulator {
 	/// Response to any message sent with ack_required set to 1. 
 	/// </summary>
 	internal class AcknowledgementResponse : LifxResponse {
+		/// <summary>
+		/// Initializes a new instance of the <see cref="AcknowledgementResponse"/> class
+		/// </summary>
+		/// <param name="newPacket">The new packet</param>
 		internal AcknowledgementResponse(LifxPacket newPacket) : base(
 			newPacket) {
 		}
@@ -256,6 +333,11 @@ namespace LifxEmulator {
 		/// </summary>
 		public ushort Index { get; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="StateMultiZoneResponse"/> class
+		/// </summary>
+		/// <param name="newPacket">The new packet</param>
+		/// <param name="devData">The dev data</param>
 		internal StateMultiZoneResponse(LifxPacket newPacket, DeviceData devData) : base(
 			newPacket) {
 			Count = 8;
@@ -275,6 +357,10 @@ namespace LifxEmulator {
 		}
 	}
 
+	/// <summary>
+	/// The state wifi info response class
+	/// </summary>
+	/// <seealso cref="LifxResponse"/>
 	public class StateWifiInfoResponse : LifxResponse {
 		/// <summary>
 		/// Radio receive signal strength in milliWatts
@@ -291,6 +377,10 @@ namespace LifxEmulator {
 		/// </summary>
 		public uint Tx { get; set; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="StateWifiInfoResponse"/> class
+		/// </summary>
+		/// <param name="newPacket">The new packet</param>
 		internal StateWifiInfoResponse(LifxPacket newPacket) : base(newPacket) {
 			Signal = 20;
 			Tx = 666;
@@ -321,6 +411,10 @@ namespace LifxEmulator {
 		/// </summary>
 		public ushort VersionMinor { get; set; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="StateWifiFirmwareResponse"/> class
+		/// </summary>
+		/// <param name="newPacket">The new packet</param>
 		internal StateWifiFirmwareResponse(LifxPacket newPacket) : base(newPacket) {
 			Build = DateTime.Now;
 			ulong reserved = 0;
@@ -334,8 +428,16 @@ namespace LifxEmulator {
 	/// Response to GetLabel message. Provides device label.
 	/// </summary>
 	internal class StateLabelResponse : LifxResponse {
+		/// <summary>
+		/// Gets the value of the label
+		/// </summary>
 		public string? Label { get; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="StateLabelResponse"/> class
+		/// </summary>
+		/// <param name="newPacket">The new packet</param>
+		/// <param name="devData">The dev data</param>
 		internal StateLabelResponse(LifxPacket newPacket, DeviceData devData) : base(newPacket) {
 			Label = devData.Label;	
 			Payload = new Payload(new object[] {Label});
@@ -361,6 +463,10 @@ namespace LifxEmulator {
 		/// </summary>
 		public long Uptime { get; set; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="StateInfoResponse"/> class
+		/// </summary>
+		/// <param name="newPacket">The new packet</param>
 		internal StateInfoResponse(LifxPacket newPacket) : base(newPacket) {
 			Time = DateTime.Now;
 			Uptime = 5000;
@@ -380,6 +486,10 @@ namespace LifxEmulator {
 		/// </summary>
 		public byte[] RequestPayload { get; set; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="EchoResponse"/> class
+		/// </summary>
+		/// <param name="newPacket">The new packet</param>
 		internal EchoResponse(LifxPacket newPacket) : base(newPacket) {
 			RequestPayload = Payload.ToArray();
 		}
@@ -405,6 +515,10 @@ namespace LifxEmulator {
 		/// </summary>
 		public List<Tile> Tiles { get; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="StateDeviceChainResponse"/> class
+		/// </summary>
+		/// <param name="newPacket">The new packet</param>
 		internal StateDeviceChainResponse(LifxPacket newPacket) : base(newPacket) {
 			Tiles = new List<Tile>();
 			TotalCount = 16;
@@ -424,12 +538,21 @@ namespace LifxEmulator {
 		}
 	}
 	
+	/// <summary>
+	/// The state light power response class
+	/// </summary>
+	/// <seealso cref="LifxResponse"/>
 	public class StateLightPowerResponse : LifxResponse {
 		/// <summary>
 		/// Zero implies standby and non-zero sets a corresponding power draw level. Currently only 0 and 65535 are supported.
 		/// </summary>
 		public ushort Level { get; set; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="StateLightPowerResponse"/> class
+		/// </summary>
+		/// <param name="packet">The packet</param>
+		/// <param name="devData">The dev data</param>
 		internal StateLightPowerResponse(LifxPacket packet, DeviceData devData) : base(packet) {
 			Level = devData.PowerLevel;
 			
@@ -437,12 +560,21 @@ namespace LifxEmulator {
 		}
 	}
 
+	/// <summary>
+	/// The state power response class
+	/// </summary>
+	/// <seealso cref="LifxResponse"/>
 	public class StatePowerResponse : LifxResponse {
 		/// <summary>
 		/// Zero implies standby and non-zero sets a corresponding power draw level. Currently only 0 and 65535 are supported.
 		/// </summary>
 		public ushort Level { get; set; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="StatePowerResponse"/> class
+		/// </summary>
+		/// <param name="packet">The packet</param>
+		/// <param name="devData">The dev data</param>
 		internal StatePowerResponse(LifxPacket packet, DeviceData devData) : base(packet) {
 			Level = devData.PowerLevel;
 			
@@ -451,13 +583,31 @@ namespace LifxEmulator {
 		}
 	}
 
+	/// <summary>
+	/// The state location response class
+	/// </summary>
+	/// <seealso cref="LifxResponse"/>
 	public class StateLocationResponse : LifxResponse {
+		/// <summary>
+		/// Gets or sets the value of the location
+		/// </summary>
 		public byte[] Location { get; set; }
 
+		/// <summary>
+		/// Gets or sets the value of the updated
+		/// </summary>
 		public DateTime Updated { get; set; }
 
+		/// <summary>
+		/// Gets or sets the value of the label
+		/// </summary>
 		public string Label { get; set; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="StateLocationResponse"/> class
+		/// </summary>
+		/// <param name="newPacket">The new packet</param>
+		/// <param name="devData">The dev data</param>
 		internal StateLocationResponse(LifxPacket newPacket, DeviceData devData) : base(newPacket) {
 			Location = devData.Location;
 			Label = devData.LocationLabel;
@@ -471,12 +621,26 @@ namespace LifxEmulator {
 	/// Device group.
 	/// </summary>
 	public class StateGroupResponse : LifxResponse {
+		/// <summary>
+		/// Gets or sets the value of the group
+		/// </summary>
 		public byte[] Group { get; set; }
 
+		/// <summary>
+		/// Gets or sets the value of the updated
+		/// </summary>
 		public DateTime Updated { get; set; }
 
+		/// <summary>
+		/// Gets or sets the value of the label
+		/// </summary>
 		public string Label { get; set; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="StateGroupResponse"/> class
+		/// </summary>
+		/// <param name="newPacket">The new packet</param>
+		/// <param name="devData">The dev data</param>
 		internal StateGroupResponse(LifxPacket newPacket, DeviceData devData) : base(newPacket) {
 			
 			Group = devData.Group;
@@ -505,6 +669,11 @@ namespace LifxEmulator {
 		/// </summary>
 		public ushort Index { get; private set; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="StateExtendedColorZonesResponse"/> class
+		/// </summary>
+		/// <param name="newPacket">The new packet</param>
+		/// <param name="devData">The dev data</param>
 		internal StateExtendedColorZonesResponse(LifxPacket newPacket, DeviceData devData) :
 			base(newPacket) {
 			Colors = new List<LifxColor>();
@@ -547,6 +716,11 @@ namespace LifxEmulator {
 		/// </summary>
 		public LifxColor Color { get; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="LightStateResponse"/> class
+		/// </summary>
+		/// <param name="newPacket">The new packet</param>
+		/// <param name="devData">The dev data</param>
 		internal LightStateResponse(LifxPacket newPacket, DeviceData devData) : base(newPacket) {
 				Label = devData.Label;
 				Brightness = devData.PowerLevel;
@@ -580,12 +754,23 @@ namespace LifxEmulator {
 		/// </summary>
 		public LifxColor Color { get; }
 		
+		/// <summary>
+		/// Gets the value of the restore white
+		/// </summary>
 		public bool RestoreWhite { get; }
 		
+		/// <summary>
+		/// Gets the value of the restore state
+		/// </summary>
 		public bool RestoreState { get; }
 
 		
 		
+		/// <summary>
+		/// Initializes a new instance of the <see cref="LightStateLightRestoreResponse"/> class
+		/// </summary>
+		/// <param name="newPacket">The new packet</param>
+		/// <param name="devData">The dev data</param>
 		internal LightStateLightRestoreResponse(LifxPacket newPacket, DeviceData devData) : base(newPacket) {
 			Color = devData.Color;
 			var args = new List<object> {
@@ -617,11 +802,16 @@ namespace LifxEmulator {
 		/// </summary>
 		public uint Version { get; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="StateVersionResponse"/> class
+		/// </summary>
+		/// <param name="newPacket">The new packet</param>
+		/// <param name="productData">The product data</param>
 		internal StateVersionResponse(LifxPacket newPacket, Product productData) : base(
 			newPacket) {
 			Product = 32;
 
-			Product = (uint) productData.pid;
+			Product = (uint) productData.Pid;
 			Vendor = 1;
 			Version = 117506305;
 			var args = new List<object> {Vendor, Product, Version};
@@ -638,6 +828,9 @@ namespace LifxEmulator {
 		/// </summary>
 		public DateTime Build { get; }
 
+		/// <summary>
+		/// Gets the value of the version major
+		/// </summary>
 		public uint VersionMajor { get; }
 
 		/// <summary>
@@ -645,6 +838,10 @@ namespace LifxEmulator {
 		/// </summary>
 		public uint VersionMinor { get; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="StateHostFirmwareResponse"/> class
+		/// </summary>
+		/// <param name="newPacket">The new packet</param>
 		internal StateHostFirmwareResponse(LifxPacket newPacket) : base(
 			newPacket) {
 			Build = DateTime.Now;
@@ -669,6 +866,10 @@ namespace LifxEmulator {
 		/// </summary>
 		public int RelayIndex { get; }
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="StateRelayPowerResponse"/> class
+		/// </summary>
+		/// <param name="newPacket">The new packet</param>
 		internal StateRelayPowerResponse(LifxPacket newPacket) : base(
 			newPacket) {
 			RelayIndex = 0;

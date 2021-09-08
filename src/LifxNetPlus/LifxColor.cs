@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 
@@ -24,7 +24,7 @@ namespace LifxNetPlus {
 		/// <summary>
 		/// Color Temperature
 		/// </summary>
-		public ushort Kelvin { get; set; } = 5750;
+		public ushort Kelvin { get; set; } = 0;
 
 		/// <summary>
 		/// Default constructor
@@ -79,7 +79,7 @@ namespace LifxNetPlus {
 		///     Create a lifx color from RGB color and optional brightness (double, 0-1)
 		/// </summary>
 		/// <param name="color"></param>
-		/// <param name="brightness"></param>
+		/// <param name="brightness">Brightness as a decimal</param>
 		public LifxColor(Color color, double brightness = -1) {
 			var hsb = Utilities.RgbToHsb(color);
 			H = hsb[0];
@@ -89,7 +89,6 @@ namespace LifxNetPlus {
 				return;
 			}
 
-			B *= brightness;
 			if (B > brightness) {
 				B = brightness;
 			}

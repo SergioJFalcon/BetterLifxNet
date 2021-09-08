@@ -1,12 +1,21 @@
-﻿using System;
+using System;
 
 namespace LifxNetPlus {
 	/// <summary>
 	/// Simple class to get message ID (Sequence) and/or source for messages
 	/// </summary>
 	public static class MessageId {
+		/// <summary>
+		/// The sequence
+		/// </summary>
 		private static byte _sequence = 1;
+		/// <summary>
+		/// The identifier lock
+		/// </summary>
 		private static readonly object IdentifierLock = new object();
+		/// <summary>
+		/// The source
+		/// </summary>
 		private static uint _source;
 
 		/// <summary>

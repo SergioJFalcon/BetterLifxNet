@@ -19,8 +19,17 @@
     <RepositoryType>git</RepositoryType>
     <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
-    <PackageVersion>1.1.3</PackageVersion>
-    <PackageReleaseNotes>Remove unused packages</PackageReleaseNotes>
+    <PackageVersion>1.1.4</PackageVersion>
+    <PackageReleaseNotes>Cleanup code, fix build warnings, add documentation.</PackageReleaseNotes>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DocumentationFile />
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DocumentationFile />
   </PropertyGroup>
 
   <ItemGroup>

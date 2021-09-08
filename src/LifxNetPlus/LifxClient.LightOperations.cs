@@ -1,18 +1,42 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace LifxNetPlus {
+	/// <summary>
+	/// The lifx client class
+	/// </summary>
 	public partial class LifxClient {
+		/// <summary>
+		/// Waveform Types
+		/// </summary>
 		public enum WaveFormType : ushort {
 			//Device Messages
-			Saw = 0,
-			Sine = 1,
-			HalfSine = 2,
-			Triangle = 3,
-			Pulse = 4
+			/// <summary>
+			/// The saw wave form type
+			/// </summary>
+			Saw = 0, // Saw wave
+			/// <summary>
+			/// The sine wave form type
+			/// </summary>
+			Sine = 1, // Sine wave
+			/// <summary>
+			/// The half sine wave form type
+			/// </summary>
+			HalfSine = 2, // Half sine wave
+			/// <summary>
+			/// The triangle wave form type
+			/// </summary>
+			Triangle = 3, // Triangle
+			/// <summary>
+			/// The pulse wave form type
+			/// </summary>
+			Pulse = 4 // Pulse
 		}
 
+		/// <summary>
+		/// The lifx response
+		/// </summary>
 		private readonly Dictionary<uint, Action<LifxResponse>> _taskCompletions =
 			new Dictionary<uint, Action<LifxResponse>>();
 
@@ -25,7 +49,6 @@ namespace LifxNetPlus {
 		/// <seealso cref="TurnDeviceOffAsync(LifxNetPlus.Device,int)" />
 		/// <seealso cref="TurnDeviceOnAsync(Device)" />
 		/// <seealso cref="TurnDeviceOffAsync(Device)" />
-		/// <seealso cref="SetLightPowerAsync(Device, bool, int)" />
 		/// <seealso cref="SetDevicePowerStateAsync(Device, bool)" />
 		/// <seealso cref="GetLightPowerAsync(Device)" />
 		public Task TurnDeviceOnAsync(Device device, int duration) {
@@ -38,7 +61,6 @@ namespace LifxNetPlus {
 		/// <seealso cref="TurnDeviceOnAsync(LifxNetPlus.Device,int)" />
 		/// <seealso cref="TurnDeviceOnAsync(Device)" />
 		/// <seealso cref="TurnDeviceOffAsync(Device)" />
-		/// <seealso cref="SetLightPowerAsync(Device, bool, int)" />
 		/// <seealso cref="SetDevicePowerStateAsync(Device, bool)" />
 		/// <seealso cref="GetLightPowerAsync(Device)" />
 		public Task TurnDeviceOffAsync(Device device, int duration) {
@@ -64,7 +86,7 @@ namespace LifxNetPlus {
 				throw new ArgumentNullException(nameof(device));
 			}
 
-			if (duration > uint.MaxValue ||
+			if (duration > int.MaxValue ||
 			    duration < 0) {
 				throw new ArgumentOutOfRangeException(nameof(duration));
 			}
@@ -113,7 +135,7 @@ namespace LifxNetPlus {
 				throw new ArgumentNullException(nameof(device));
 			}
 
-			if (duration > uint.MaxValue || duration < 0) {
+			if (duration > int.MaxValue || duration < 0) {
 				throw new ArgumentOutOfRangeException(nameof(duration));
 			}
 
@@ -146,7 +168,7 @@ namespace LifxNetPlus {
 				throw new ArgumentNullException(nameof(device));
 			}
 
-			if (duration > uint.MaxValue || duration < 0) {
+			if (duration > int.MaxValue || duration < 0) {
 				throw new ArgumentOutOfRangeException(nameof(duration));
 			}
 
@@ -232,7 +254,7 @@ namespace LifxNetPlus {
 		public async Task SetBrightnessAsync(Device device,
 			ushort brightness,
 			int duration = 0, bool ackRequired = false) {
-			if (duration > uint.MaxValue ||
+			if (duration > int.MaxValue ||
 			    duration < 0) {
 				throw new ArgumentOutOfRangeException(nameof(duration));
 			}

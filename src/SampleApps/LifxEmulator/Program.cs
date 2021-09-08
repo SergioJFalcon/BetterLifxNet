@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -12,13 +12,37 @@ using Newtonsoft.Json;
 using Console = Colorful.Console;
 
 namespace LifxEmulator {
+	/// <summary>
+	/// The program class
+	/// </summary>
 	internal static class Program {
+		/// <summary>
+		/// The device version
+		/// </summary>
 		private static int _deviceVersion;
+		/// <summary>
+		/// The quit flag
+		/// </summary>
 		private static bool _quitFlag;
+		/// <summary>
+		/// The data
+		/// </summary>
 		private static DeviceData _data;
+		/// <summary>
+		/// The product info
+		/// </summary>
 		private static Product _productInfo;
+		/// <summary>
+		/// The messages
+		/// </summary>
 		private static List<string> _messages;
+		/// <summary>
+		/// The client
+		/// </summary>
 		private static UdpClient _client;
+		/// <summary>
+		/// Main
+		/// </summary>
 		public static void Main() {
 			_messages = new List<string>();
 			
@@ -77,14 +101,22 @@ namespace LifxEmulator {
 					break;
 			}
 			
-			Console.WriteLine("Emulating product: " + _productInfo.name);
+			Console.WriteLine("Emulating product: " + _productInfo.Name);
 			StartListener().Wait();
 		}
 
+		/// <summary>
+		/// Handles the close using the specified sender
+		/// </summary>
+		/// <param name="sender">The sender</param>
+		/// <param name="args">The args</param>
 		private static void HandleClose(object sender, ConsoleCancelEventArgs args) {
 			_quitFlag = true;
 		}
 
+		/// <summary>
+		/// Starts the listener
+		/// </summary>
 		private static async Task StartListener() {
 			try {
 				_data = LoadData();
@@ -112,6 +144,12 @@ namespace LifxEmulator {
 		}
 
 
+		/// <summary>
+		/// Handles the incoming messages using the specified data
+		/// </summary>
+		/// <param name="data">The data</param>
+		/// <param name="endpoint">The endpoint</param>
+		/// <param name="client">The client</param>
 		private static async Task HandleIncomingMessages(byte[] data, IPEndPoint endpoint, UdpClient client) {
 			var remote = endpoint;
 			await ParseMessage(data, remote, client);
@@ -120,11 +158,21 @@ namespace LifxEmulator {
 		}
 
 
+		/// <summary>
+		/// Broadcasts the message using the specified target
+		/// </summary>
+		/// <param name="target">The target</param>
+		/// <param name="packet">The packet</param>
+		/// <param name="client">The client</param>
 		private static async Task BroadcastMessageAsync(IPEndPoint target, LifxPacket packet, UdpClient client) {
 			var msg = packet.Encode();
 			await client.SendAsync(msg, msg.Length, target);
 		}
 
+		/// <summary>
+		/// Loads the data
+		/// </summary>
+		/// <returns>The device data</returns>
 		private static DeviceData LoadData() {
 			var basePath = AppDomain.CurrentDomain.BaseDirectory;
 			var path = Path.Combine(basePath, $"config{_deviceVersion}.json");
@@ -136,6 +184,9 @@ namespace LifxEmulator {
 			return new DeviceData();
 		}
 
+		/// <summary>
+		/// Saves the data
+		/// </summary>
 		private static void SaveData() {
 			var basePath = AppDomain.CurrentDomain.BaseDirectory;
 			var path = Path.Combine(basePath, $"config{_deviceVersion}.json");
@@ -150,6 +201,12 @@ namespace LifxEmulator {
 		}
 
 
+		/// <summary>
+		/// Parses the message using the specified packet
+		/// </summary>
+		/// <param name="packet">The packet</param>
+		/// <param name="incoming">The incoming</param>
+		/// <param name="client">The client</param>
 		private static async Task ParseMessage(byte[] packet, IPEndPoint incoming, UdpClient client) {
 			var msg = new LifxPacket(packet);
 			Debug.WriteLine( $"{incoming.Address}=>LOCAL::{msg.Type}: " + JsonConvert.SerializeObject(msg));
@@ -328,6 +385,10 @@ namespace LifxEmulator {
 			}
 		}
 
+		/// <summary>
+		/// Gets the mac address
+		/// </summary>
+		/// <returns>The mac</returns>
 		private static byte[] GetMacAddress() {
 			var mac = new byte[] {0, 0, 0, 0, 0, 0, 0, 0};
 			var interfaces = NetworkInterface.GetAllNetworkInterfaces();

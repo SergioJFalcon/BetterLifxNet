@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -8,19 +8,55 @@ using System.Threading.Tasks;
 using LifxNetPlus;
 
 namespace ColorSendTest {
+	/// <summary>
+	/// The program class
+	/// </summary>
 	class Program {
+		/// <summary>
+		/// The client
+		/// </summary>
 		private static LifxClient _client;
+		/// <summary>
+		/// The devices bulb
+		/// </summary>
 		private static List<Device> _devicesBulb;
+		/// <summary>
+		/// The devices multi
+		/// </summary>
 		private static List<Device> _devicesMulti;
+		/// <summary>
+		/// The devices multi
+		/// </summary>
 		private static List<Device> _devicesMultiV2;
+		/// <summary>
+		/// The devices switch
+		/// </summary>
 		private static List<Device> _devicesSwitch;
+		/// <summary>
+		/// The devices tile
+		/// </summary>
 		private static List<Device> _devicesTile;
+		/// <summary>
+		/// The state list
+		/// </summary>
 		private static List<int> stateList = new();
+		/// <summary>
+		/// The responses
+		/// </summary>
 		private static List<StateExtendedColorZonesResponse> responses = new();
 
+		/// <summary>
+		/// The colors
+		/// </summary>
 		private static Dictionary<string, LifxColor> _colors;
+		/// <summary>
+		/// The color idx
+		/// </summary>
 		private static int _colorIdx;
 
+		/// <summary>
+		/// Main
+		/// </summary>
 		static async Task Main() {
 
 			_colors = new Dictionary<string, LifxColor>();
@@ -97,6 +133,9 @@ namespace ColorSendTest {
 			Console.ReadKey();
 		}
 
+		/// <summary>
+		/// Flashes the bulbs
+		/// </summary>
 		private static async Task FlashBulbs() {
 			// Save our existing states
 			var stateList = new List<LightStateResponse>();
@@ -122,6 +161,9 @@ namespace ColorSendTest {
 			// }
 		}
 
+		/// <summary>
+		/// Flashes the multizone
+		/// </summary>
 		private static async Task FlashMultizone() {
 			var stateList = new List<int>();
 			var responses = new List<StateMultiZoneResponse>();
@@ -176,6 +218,10 @@ namespace ColorSendTest {
 			}
 		}
 
+		/// <summary>
+		/// Cycles the color
+		/// </summary>
+		/// <returns>The color</returns>
 		private static LifxColor CycleColor() {
 			var color = _colors.ElementAt(_colorIdx).Value;
 			_colorIdx++;
@@ -189,6 +235,9 @@ namespace ColorSendTest {
 			return color;
 		}
 
+		/// <summary>
+		/// Flashes the multizone v 2
+		/// </summary>
 		private static async Task FlashMultizoneV2() {
 			var hex =
 				"bc02001411002553d073d542b31500004c4946585632061c0000000000000000fe0100002c010000010000475555ffffe8f5ac0df95379fee8f5ac0d9e52f4fce8f5ac0d43516ffbe8f5ac0de84feaf9e8f5ac0d8d4e65f8e8f5ac0d324de0f6e8f5ac0dd74b5bf5e8f5ac0d2a4b98f4e8f5ac0d7c4ad6f3e8f5ac0d214950f2e8f5ac0dc647cbf0e8f5ac0d6b4646efe8f5ac0d1045c1ede8f5ac0db5433cece8f5ac0d5a42b7eae8f5ac0dff4032e9e8f5ac0d52406fe8e8f5ac0da43fade7e8f5ac0d493e28e6e8f5ac0dee3ca2e4e8f5ac0d933b1de3e8f5ac0d383a98e1e8f5ac0ddd3813e0e8f5ac0d82378edee8f5ac0d273609dde8f5ac0d7a3546dce8f5ac0dcc3484dbe8f5ac0d7133ffd9e8f5ac0d16327ad8e8f5ac0dbb30f4d6e8f5ac0d602f6fd5e8f5ac0d052eead3e8f5ac0daa2c65d2e8f5ac0d4f2be0d0e8f5ac0da12a1dd0e8f5ac0df4295bcfe8f5ac0d4f2bcbce3af6ac0daa2c3cce8cf6ac0d052eadcddef6ac0d602f1dcd30f7ac0dbb308ecc82f7ac0d1632ffcbd4f7ac0d71336fcb26f8ac0dcc34e0ca78f8ac0d273651cacaf8ac0d8237c1c91cf9ac0ddd3832c96ef9ac0d383aa3c8c0f9ac0d933b13c812faac0dee3c84c764faac0d493ef4c6b6faac0df73eadc6dffaac0da43f65c608fbac0dff40d6c55afbac0d5a4246c5acfbac0db543b7c4fefbac0d104528c450fcac0d6b4698c3a2fcac0dc64709c3f4fcac0d21497ac246fdac0dcf4932c26ffdac0d7c4aeac198fdac0dd74b5bc1eafdac0d324dccc03cfeac0d8d4e3cc08efeac0de84fadbfe0feac0d43511dbf32ffac0d9e528ebe84ffac0df953ffbdd6ffac0da754b7bdfeffac0d00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
@@ -197,7 +246,7 @@ namespace ColorSendTest {
 			 	.Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
 			 	.ToArray();
 			 var ep = new IPEndPoint(IPAddress.Any, 56700);
-			var pack = LifxClient.ParseMessage(bytes, ep, false);
+			var pack = LifxClient.ParseMessage(bytes);
 			//Debug.WriteLine("PACK: " + JsonConvert.SerializeObject(pack));
 			Debug.WriteLine("CAP BYTES: " + LifxClient.HexString(pack.Encode()));
 
@@ -230,6 +279,10 @@ namespace ColorSendTest {
 			
 		}
 
+		/// <summary>
+		/// Sends the bow using the specified transition
+		/// </summary>
+		/// <param name="transition">The transition</param>
 		private static void SendBow(int transition) {
 			var idx = 0;
 			var loopColor = CycleColor();
@@ -249,6 +302,9 @@ namespace ColorSendTest {
 			}
 		}
 
+		/// <summary>
+		/// Flashes the tiles
+		/// </summary>
 		private static async Task FlashTiles() {
 			var chains = new List<StateDeviceChainResponse>();
 			foreach (var t in _devicesTile) {
@@ -298,9 +354,17 @@ namespace ColorSendTest {
 			}
 		}
 
+		/// <summary>
+		/// Flashes the switches
+		/// </summary>
 		private static void FlashSwitches() {
 		}
 
+		/// <summary>
+		/// Rainbows the progress
+		/// </summary>
+		/// <param name="progress">The progress</param>
+		/// <returns>The lifx color</returns>
 		private static LifxColor Rainbow(float progress) {
 			progress *= .01f;
 			Console.WriteLine("Progress is " + progress);
@@ -318,10 +382,20 @@ namespace ColorSendTest {
 			return new LifxColor(output);
 		}
 
+		/// <summary>
+		/// Clients the device lost using the specified sender
+		/// </summary>
+		/// <param name="sender">The sender</param>
+		/// <param name="e">The </param>
 		private static void ClientDeviceLost(object sender, LifxClient.DeviceDiscoveryEventArgs e) {
 			Console.WriteLine("Device lost");
 		}
 
+		/// <summary>
+		/// Clients the device discovered using the specified sender
+		/// </summary>
+		/// <param name="sender">The sender</param>
+		/// <param name="e">The </param>
 		private static async void ClientDeviceDiscovered(object sender, LifxClient.DeviceDiscoveryEventArgs e) {
 			Console.WriteLine($"Fetching version for {e.Device.HostName}");
 			var version = await _client.GetDeviceVersionAsync(e.Device);

@@ -1,19 +1,40 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 
 namespace LifxNetPlus {
+	/// <summary>
+	/// The lifx client class
+	/// </summary>
 	public partial class LifxClient {
 		/// <summary>
 		/// Tile Effect Type
 		/// </summary>
 		public enum TileEffectType {
+			/// <summary>
+			/// The off tile effect type
+			/// </summary>
 			Off = 0,
+			/// <summary>
+			/// The reserved tile effect type
+			/// </summary>
 			Reserved1 = 1,
+			/// <summary>
+			/// The morph tile effect type
+			/// </summary>
 			Morph = 2,
+			/// <summary>
+			/// The flame tile effect type
+			/// </summary>
 			Flame = 3,
+			/// <summary>
+			/// The reserved tile effect type
+			/// </summary>
 			Reserved2 = 4
 		}
 
+		/// <summary>
+		/// The reserved
+		/// </summary>
 		private const int Reserved = 0x00;
 
 		/// <summary>

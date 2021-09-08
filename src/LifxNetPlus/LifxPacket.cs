@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -191,18 +191,37 @@ namespace LifxNetPlus {
 		}
 
 
+		/// <summary>
+		/// Describes whether get bit
+		/// </summary>
+		/// <param name="b">The </param>
+		/// <param name="bitNumber">The bit number</param>
+		/// <returns>The bool</returns>
 		private static bool GetBit(byte b, int bitNumber) {
 			byte[] bytearray = {b};
 			var bitArray = new BitArray(bytearray);
 			return bitArray[bitNumber];
 		}
 
+		/// <summary>
+		/// Describes whether get bit
+		/// </summary>
+		/// <param name="b">The </param>
+		/// <param name="bitNumber">The bit number</param>
+		/// <returns>The bool</returns>
 		private static bool GetBit(byte[] b, int bitNumber) {
 			byte[] bytearray = b;
 			var bitArray = new BitArray(bytearray);
 			return bitArray[bitNumber];
 		}
 
+		/// <summary>
+		/// Sets the bit using the specified b
+		/// </summary>
+		/// <param name="b">The </param>
+		/// <param name="bitNumber">The bit number</param>
+		/// <param name="value">The value</param>
+		/// <returns>The byte</returns>
 		private static byte SetBit(byte b, int bitNumber, bool value) {
 			byte[] bytearray = {b};
 			var bitArray = new BitArray(bytearray);
@@ -211,6 +230,13 @@ namespace LifxNetPlus {
 			return bytearray[0];
 		}
 
+		/// <summary>
+		/// Sets the bit using the specified b
+		/// </summary>
+		/// <param name="b">The </param>
+		/// <param name="bitNumber">The bit number</param>
+		/// <param name="value">The value</param>
+		/// <returns>The bytearray</returns>
 		private static byte[] SetBit(byte[] b, int bitNumber, bool value) {
 			byte[] bytearray = b;
 			var bitArray = new BitArray(bytearray);

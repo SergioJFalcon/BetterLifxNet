@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
@@ -10,10 +10,22 @@ namespace LifxNetPlus {
 	///     LIFX Client for communicating with bulbs
 	/// </summary>
 	public partial class LifxClient {
+		/// <summary>
+		/// The port
+		/// </summary>
 		private const int Port = 56700;
+		/// <summary>
+		/// The socket
+		/// </summary>
 		private readonly UdpClient _socket;
+		/// <summary>
+		/// The is running
+		/// </summary>
 		private bool _isRunning;
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="LifxClient"/> class
+		/// </summary>
 		private LifxClient() {
 			IPEndPoint end = new IPEndPoint(IPAddress.Any, Port);
 			_socket = new UdpClient(end) {Client = {Blocking = false}};
@@ -42,12 +54,18 @@ namespace LifxNetPlus {
 			return Task.FromResult(client);
 		}
 
+		/// <summary>
+		/// Initializes this instance
+		/// </summary>
 		private void Initialize() {
 			_isRunning = true;
 			StartReceiveLoop();
 		}
 
 
+		/// <summary>
+		/// Starts the receive loop
+		/// </summary>
 		private void StartReceiveLoop() {
 			Task.Run(async () => {
 				while (_isRunning) {
@@ -63,9 +81,14 @@ namespace LifxNetPlus {
 			});
 		}
 
+		/// <summary>
+		/// Handles the incoming messages using the specified data
+		/// </summary>
+		/// <param name="data">The data</param>
+		/// <param name="endpoint">The endpoint</param>
 		private void HandleIncomingMessages(byte[] data, IPEndPoint endpoint) {
 			var remote = endpoint;
-			var msg = ParseMessage(data, endpoint);
+			var msg = ParseMessage(data);
 			switch (msg.Packet.Type) {
 				case MessageType.DeviceStateService:
 					ProcessDeviceDiscoveryMessage(remote.Address, (StateServiceResponse) msg);
@@ -84,10 +107,21 @@ namespace LifxNetPlus {
 			// 		string.Join(",", (from a in data select a.ToString("X2")).ToArray()));
 		}
 
-		private Task<T> BroadcastMessageAsync<T>(LifxPacket packet) where T : LifxResponse {
+		/// <summary>
+		/// Broadcasts the message using the specified packet
+		/// </summary>
+		/// <typeparam name="T">The </typeparam>
+		/// <param name="packet">The packet</param>
+		/// <returns>A task containing the</returns>
+		private Task<T?> BroadcastMessageAsync<T>(LifxPacket packet) where T : LifxResponse {
 			return BroadcastPayloadAsync<T>("255.255.255.255", packet);
 		}
 
+		/// <summary>
+		/// Create a hex string from a byte array
+		/// </summary>
+		/// <param name="ba"></param>
+		/// <returns></returns>
 		public static string HexString(byte[] ba) {
 			StringBuilder hex = new StringBuilder(ba.Length * 2);
 			foreach (var b in ba) {
@@ -97,20 +131,28 @@ namespace LifxNetPlus {
 			return hex.ToString();
 		}
 
+		/// <summary>
+		/// Broadcasts the message using the specified device
+		/// </summary>
+		/// <typeparam name="T">The </typeparam>
+		/// <param name="device">The device</param>
+		/// <param name="packet">The packet</param>
+		/// <returns>The response</returns>
 		private Task<T?> BroadcastMessageAsync<T>(Device device, LifxPacket packet)
 			where T : LifxResponse {
 			var hostname = device.HostName;
 			packet.Target = device.MacAddress;
 			var response = BroadcastPayloadAsync<T>(hostname, packet);
-			var bytes = packet.Encode();
-			var ep = new IPEndPoint(IPAddress.Parse(device.HostName), 56700);
-			var pack = ParseMessage(bytes, ep, false);
-			//Debug.WriteLine($"LOCAL=>{hostname}::{packet.Type}: " + JsonConvert.SerializeObject(pack));
-			//Debug.WriteLine("PACK BYTES: " + HexString(pack.Encode()));
 			return response;
 		}
 
 
+		/// <summary>
+		/// Broadcasts the message using the specified device
+		/// </summary>
+		/// <param name="device">The device</param>
+		/// <param name="packet">The packet</param>
+		/// <exception cref="InvalidOperationException">No valid socket</exception>
 		private async Task BroadcastMessageAsync(Device device, LifxPacket packet) {
 			var hostname = device.HostName;
 			packet.Target = device.MacAddress;
@@ -119,10 +161,17 @@ namespace LifxNetPlus {
 			}
 
 			var msg = packet.Encode();
-			_socket.Send(msg, msg.Length, hostname, Port);
-			await Task.FromResult(true);
+			await _socket.SendAsync(msg, msg.Length, hostname, Port);
 		}
 
+		/// <summary>
+		/// Broadcasts the payload using the specified host
+		/// </summary>
+		/// <typeparam name="T">The </typeparam>
+		/// <param name="host">The host</param>
+		/// <param name="packet">The packet</param>
+		/// <exception cref="InvalidOperationException">No valid socket</exception>
+		/// <returns>The result</returns>
 		private async Task<T?> BroadcastPayloadAsync<T>(string host, LifxPacket packet)
 			where T : LifxResponse {
 			if (_socket == null) {
@@ -145,34 +194,34 @@ namespace LifxNetPlus {
 			var msg = packet.Encode();
 			await _socket.SendAsync(msg, msg.Length, host, Port);
 			
-			T result = default;
-			if (tcs != null) {
-				var _ = Task.Delay(1000).ContinueWith(t => {
-					if (!t.IsCompleted) {
-						tcs.TrySetException(new TimeoutException());
-					}
-				});
-				try {
-					result = await tcs.Task;
-				} finally {
-					_taskCompletions.Remove(packet.Sequence);
+			T? result = default;
+			if (tcs == null) {
+				return result;
+			}
+
+			var _ = Task.Delay(1000).ContinueWith(t => {
+				if (!t.IsCompleted) {
+					tcs.TrySetException(new TimeoutException());
 				}
+			});
+			try {
+				result = await tcs.Task;
+			} finally {
+				_taskCompletions.Remove(packet.Sequence);
 			}
 
 			return result;
 		}
 
 
-		public static LifxResponse ParseMessage(byte[] packet, IPEndPoint ep = null, bool log = true) {
-			if (ep == null) {
-				ep = new IPEndPoint(IPAddress.Any, 56700);
-			}
-
+		/// <summary>
+		/// Parse a Lifx Message to a response
+		/// </summary>
+		/// <param name="packet">The incoming bytes to parse.</param>
+		/// <returns>A <see cref="LifxResponse"/></returns>
+		public static LifxResponse ParseMessage(byte[] packet) {
 			var fh = new LifxPacket(packet);
-
 			var res = LifxResponse.Create(fh);
-			//if (log)Debug.WriteLine($"{ep.Address}=>LOCAL::{res.Type}: " + JsonConvert.SerializeObject(res));
-
 			return res;
 		}
 	}

@@ -1,7 +1,10 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 
 namespace LifxNetPlus {
+	/// <summary>
+	/// The lifx client class
+	/// </summary>
 	public partial class LifxClient {
 		/// <summary>
 		///     Get the power state of a relay on a switch device.

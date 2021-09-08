@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using Windows.UI.Core;
@@ -16,20 +16,45 @@ namespace SampleApp.Universal {
 	/// An empty page that can be used on its own or navigated to within a Frame.
 	/// </summary>
 	public sealed partial class MainPage : Page {
+		/// <summary>
+		/// The client
+		/// </summary>
 		LifxClient _client;
+		/// <summary>
+		/// The device
+		/// </summary>
 		ObservableCollection<Device> bulbs = new ObservableCollection<Device>();
 
+		/// <summary>
+		/// The hue
+		/// </summary>
 		UInt16 hue;
+		/// <summary>
+		/// The pending update color
+		/// </summary>
 		private Task pendingUpdateColor;
 
+		/// <summary>
+		/// The pending update color action
+		/// </summary>
 		private Action pendingUpdateColorAction;
+		/// <summary>
+		/// The saturation
+		/// </summary>
 		UInt16 saturation;
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="MainPage"/> class
+		/// </summary>
 		public MainPage() {
 			InitializeComponent();
 			bulbList.ItemsSource = bulbs;
 		}
 
+		/// <summary>
+		/// Ons the navigated to using the specified e
+		/// </summary>
+		/// <param name="e">The </param>
 		protected async override void OnNavigatedTo(NavigationEventArgs e) {
 			base.OnNavigatedTo(e);
 			_client = await LifxClient.CreateAsync();
@@ -39,6 +64,10 @@ namespace SampleApp.Universal {
 			await Task.FromResult(true);
 		}
 
+		/// <summary>
+		/// Ons the navigating from using the specified e
+		/// </summary>
+		/// <param name="e">The </param>
 		protected override void OnNavigatingFrom(NavigatingCancelEventArgs e) {
 			_client.DeviceDiscovered -= ClientDeviceDeviceDiscovered;
 			_client.DeviceLost -= ClientDeviceDeviceLost;
@@ -47,6 +76,11 @@ namespace SampleApp.Universal {
 			base.OnNavigatingFrom(e);
 		}
 
+		/// <summary>
+		/// Clients the device device lost using the specified sender
+		/// </summary>
+		/// <param name="sender">The sender</param>
+		/// <param name="e">The </param>
 		private void ClientDeviceDeviceLost(object sender, LifxClient.DeviceDiscoveryEventArgs e) {
 			var _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
 				var bulb = e.Device;
@@ -55,6 +89,11 @@ namespace SampleApp.Universal {
 			});
 		}
 
+		/// <summary>
+		/// Clients the device device discovered using the specified sender
+		/// </summary>
+		/// <param name="sender">The sender</param>
+		/// <param name="e">The </param>
 		private void ClientDeviceDeviceDiscovered(object sender, LifxClient.DeviceDiscoveryEventArgs e) {
 			var _ = Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => {
 				var bulb = e.Device;
@@ -63,6 +102,11 @@ namespace SampleApp.Universal {
 			});
 		}
 
+		/// <summary>
+		/// Bulbs the list selection changed using the specified sender
+		/// </summary>
+		/// <param name="sender">The sender</param>
+		/// <param name="e">The </param>
 		private async void bulbList_SelectionChanged(object sender, SelectionChangedEventArgs e) {
 			var bulb = bulbList.SelectedItem;
 			if (bulb != null) {
@@ -79,6 +123,11 @@ namespace SampleApp.Universal {
 				statePanel.Visibility = Visibility.Collapsed;
 		}
 
+		/// <summary>
+		/// Powers the state toggled using the specified sender
+		/// </summary>
+		/// <param name="sender">The sender</param>
+		/// <param name="e">The </param>
 		private async void PowerState_Toggled(object sender, RoutedEventArgs e) {
 			var bulb = bulbList.SelectedItem;
 			if (bulb != null) {
@@ -86,12 +135,24 @@ namespace SampleApp.Universal {
 			}
 		}
 
+		/// <summary>
+		/// Brightnesses the slider value changed using the specified sender
+		/// </summary>
+		/// <param name="sender">The sender</param>
+		/// <param name="e">The </param>
 		private void brightnessSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e) {
 			var bulb = bulbList.SelectedItem;
 			if (bulb != null)
 				SetColor((Device)bulb, null, null, (UInt16) e.NewValue);
 		}
 
+		/// <summary>
+		/// Sets the color using the specified bulb
+		/// </summary>
+		/// <param name="bulb">The bulb</param>
+		/// <param name="hue">The hue</param>
+		/// <param name="saturation">The saturation</param>
+		/// <param name="brightness">The brightness</param>
 		private async void SetColor(Device bulb, ushort? hue, ushort? saturation, ushort? brightness) {
 			if (_client == null || bulb == null) return;
 			//Is a task already running? This avoids updating too often.
@@ -126,6 +187,11 @@ namespace SampleApp.Universal {
 			}
 		}
 
+		/// <summary>
+		/// Colors the grid tapped using the specified sender
+		/// </summary>
+		/// <param name="sender">The sender</param>
+		/// <param name="e">The </param>
 		private void ColorGrid_Tapped(object sender, TappedRoutedEventArgs e) {
 			FrameworkElement elm = (FrameworkElement) sender;
 			var p = e.GetPosition(elm);
