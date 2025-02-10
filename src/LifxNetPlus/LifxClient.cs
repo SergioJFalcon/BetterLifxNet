@@ -11,7 +11,7 @@ namespace LifxNetPlus {
 	/// </summary>
 	public partial class LifxClient {
 		/// <summary>
-		/// The port
+		/// The port which defaults to 56700
 		/// </summary>
 		private const int Port = 56700;
 		/// <summary>

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Threading.Tasks;
 
 namespace LifxNetPlus {
@@ -81,13 +82,18 @@ namespace LifxNetPlus {
 		/// <seealso cref="TurnDeviceOffAsync(Device)" />
 		/// <seealso cref="SetDevicePowerStateAsync(Device, bool)" />
 		/// <seealso cref="GetLightPowerAsync(Device)" />
-		public async Task SetLightPowerAsync(Device device, bool isOn, int duration = 0, bool ackRequired = false) {
+		public async Task SetLightPowerAsync(
+			Device device,
+			bool isOn,
+			int duration = 0,
+			bool ackRequired = false)
+		{
 			if (device == null) {
 				throw new ArgumentNullException(nameof(device));
 			}
 
 			if (duration > int.MaxValue ||
-			    duration < 0) {
+					duration < 0) {
 				throw new ArgumentOutOfRangeException(nameof(duration));
 			}
 
@@ -162,8 +168,14 @@ namespace LifxNetPlus {
 		/// <param name="w"></param>
 		/// <param name="duration">An optional transition duration, in milliseconds.</param>
 		/// <returns>LightStateResponse</returns>
-		public async Task<LightStateResponse?> SetRgbwAsync(Device device, int r, int g, int b, int w = 0,
-			int duration = 0) {
+		public async Task<LightStateResponse?> SetRgbwAsync(
+			Device device, 
+			int r,
+			int g,
+			int b,
+			int w = 0,
+			int duration = 0)
+		{
 			if (device == null) {
 				throw new ArgumentNullException(nameof(device));
 			}
@@ -183,17 +195,25 @@ namespace LifxNetPlus {
 		/// <summary>
 		/// Set Light Waveform
 		/// </summary>
-		/// <param name="d"></param>
-		/// <param name="transient"></param>
+		/// <param name="d">Device</param>
+		/// <param name="transient">Set to TRUE to set the device back to it's original color after the effect if the waveform is SINE or triangle</param>
 		/// <param name="color"></param>
-		/// <param name="period"></param>
-		/// <param name="cycles"></param>
+		/// <param name="period">Length of the waveform in milliseconds</param>
+		/// <param name="cycles">How many cycles of the effect to through, the duration of a cycle will last for period milliseconds</param>
 		/// <param name="skewRatio"></param>
 		/// <param name="type"></param>
 		/// <returns></returns>
 		/// <exception cref="ArgumentNullException"></exception>
-		public async Task<LightStateResponse?> SetWaveForm(Device d, bool transient, LifxColor color, uint period,
-			float cycles, short skewRatio, WaveFormType type) {
+		public async Task<LightStateResponse?> SetWaveForm(
+			Device d,
+			bool transient,
+			LifxColor color,
+			uint period,
+			float cycles,
+			short skewRatio,
+			WaveFormType type
+			)
+		{
 			if (d == null) {
 				throw new ArgumentNullException(nameof(d));
 			}
@@ -205,6 +225,7 @@ namespace LifxNetPlus {
 					transient, color, period, cycles, skewRatio, type
 				})
 			};
+			
 			return await BroadcastMessageAsync<LightStateResponse>(d, packet);
 		}
 
@@ -224,9 +245,19 @@ namespace LifxNetPlus {
 		/// <param name="setK"></param>
 		/// <returns></returns>
 		/// <exception cref="ArgumentNullException"></exception>
-		public async Task<LightStateResponse?> SetWaveFormOptional(Device d, bool transient, LifxColor color,
+		public async Task<LightStateResponse?> SetWaveFormOptional(
+			Device d,
+			bool transient,
+			LifxColor color,
 			uint period,
-			float cycles, short skewRatio, WaveFormType type, bool setHue, bool setSat, bool setBri, bool setK) {
+			float cycles,
+			short skewRatio,
+			WaveFormType type,
+			bool setHue,
+			bool setSat,
+			bool setBri,
+			bool setK)
+		{
 			if (d == null) {
 				throw new ArgumentNullException(nameof(d));
 			}
@@ -241,6 +272,32 @@ namespace LifxNetPlus {
 			return await BroadcastMessageAsync<LightStateResponse>(d, packet);
 		}
 
+		/// <summary>
+		/// 	 Set the light to a warning state
+		/// </summary>
+		/// <param name="device"></param>
+		/// <returns></returns>
+		/// <exception cref="ArgumentNullException"></exception>
+		public async Task SetWarning(Device device) {
+			if (device == null) {
+				throw new ArgumentNullException(nameof(device));
+			}
+
+			var warning_color = new LifxColor(
+				color: Color.Yellow, 
+				brightness: 0.3
+			);
+
+			var packet = new LifxPacket(MessageType.LightSetWaveform) {
+				ResponseRequired = true,
+				Payload = new Payload(new object[] {
+					(byte) 0, //reserved
+					true, warning_color, 1000, 10000F, 0, WaveFormType.Pulse
+				})
+			};
+
+			await BroadcastMessageAsync<AcknowledgementResponse>(device, packet);
+		}
 
 		/// <summary>
 		///     Set Light Brightness
@@ -251,11 +308,13 @@ namespace LifxNetPlus {
 		/// <param name="ackRequired">Whether or not to await acknowledgement</param>
 		/// <returns></returns>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		public async Task SetBrightnessAsync(Device device,
+		public async Task SetBrightnessAsync(
+			Device device,
 			ushort brightness,
-			int duration = 0, bool ackRequired = false) {
-			if (duration > int.MaxValue ||
-			    duration < 0) {
+			int duration = 0,
+			bool ackRequired = false)
+		{
+			if (duration > int.MaxValue || duration < 0) {
 				throw new ArgumentOutOfRangeException(nameof(duration));
 			}
 

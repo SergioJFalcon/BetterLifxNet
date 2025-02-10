@@ -76,10 +76,10 @@ namespace LifxNetPlus {
 		}
 
 		/// <summary>
-		///     Create a lifx color from RGB color and optional brightness (double, 0-1)
+		/// Create a lifx color from RGB color and optional brightness percentage (as a double between 0 and 1)
 		/// </summary>
 		/// <param name="color"></param>
-		/// <param name="brightness">Brightness as a decimal</param>
+		/// <param name="brightness">Brightness Percentage as a decimal between 0 and 1</param>
 		public LifxColor(Color color, double brightness = -1) {
 			var hsb = Utilities.RgbToHsb(color);
 			H = hsb[0];

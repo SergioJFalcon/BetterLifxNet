@@ -9,7 +9,7 @@ namespace LifxNetPlus {
 		/// <summary>
 		/// Tile Effect Type
 		/// </summary>
-		public enum TileEffectType {
+		public enum TileEffectType: ushort {
 			/// <summary>
 			/// The off tile effect type
 			/// </summary>

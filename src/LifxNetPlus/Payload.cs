@@ -75,6 +75,9 @@ namespace LifxNetPlus {
 					case uint u:
 						Add(u);
 						break;
+					case bool b:
+						Add(b ? (byte) 1 : (byte) 0);
+						break;
 					case byte[] bytes:
 						Add(bytes);
 						break;
@@ -111,8 +114,17 @@ namespace LifxNetPlus {
 					case Tile t:
 						Add(t);
 						break;
+					case LifxNetPlus.LifxClient.WaveFormType wft:
+						Add(wft);
+						break;
+					// TODO: Add the rest of the enum types
+					// Do we use the enums Services, Direction, MultiZoneApplicationRequest, MultiZoneEffectType, 
+					// MultiZoneExtendedApplicationRequest, TileEffectSkyType, TileEffectSkyPalette, and LightLastHevCycleResult?
+					// case LifxNetPlus.LifxClient.TileEffectType tet:
+					// 	Add((byte) tet);
+					// 	break;
 					default:
-						//Debug.WriteLine("Unsupported type!" + args.GetType().FullName);
+						Console.WriteLine("Unsupported type!" + args.GetType().FullName);
 						throw new NotSupportedException(args.GetType().FullName);
 				}
 			}
@@ -561,6 +573,17 @@ namespace LifxNetPlus {
 			Add(input.FirmwareVersionMinor);
 			Add(input.FirmwareVersionMajor);
 			Add((uint) 0);
+		}
+
+		/// <summary>
+		/// Adds the WaveForm enum input
+		/// </summary>
+		/// <param name="input"></param>
+		private void Add(LifxNetPlus.LifxClient.WaveFormType input) {
+			Console.WriteLine($"Adding waveform type ${input}");
+			var value = (byte) input;
+			Console.WriteLine($"Value is {value}");
+			Add((byte) input);
 		}
 	}
 }
